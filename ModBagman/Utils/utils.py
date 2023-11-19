@@ -54,16 +54,17 @@ GAC_COMMON_PATHS = [
 
 
 def merge_assemblies():
+    os.chdir(BIN_PATH)
     assemblies = [x for x in os.listdir('./') if x.endswith('.dll') and not 'Xna' in x and not any([True for y in ASSEMBLY_MERGE_BLACKLIST if y in x])]
 
-    # Use ILRepack to join all assemblies into Grindless.exe
+    # Use ILRepack to join all assemblies into target
     cmd = [
         ILREPACK_PATH,
-        '/out:' + BIN_PATH + 'merged/' + TARGET_ASSEMBLY,
+        '/out:merged/' + TARGET_ASSEMBLY,
         '/zeropekind',
         '/union',
         '/xmldocs',
-        BIN_PATH + TARGET_ASSEMBLY,
+        TARGET_ASSEMBLY,
         ' '.join(assemblies)
     ]
 
