@@ -110,7 +110,7 @@ public class PinEntry : Entry<PinCodex.PinType>
     /// </summary>
     public bool CreateCollectionEntry { get; set; } = true;
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         if (CreateCollectionEntry)
         {
@@ -118,7 +118,7 @@ public class PinEntry : Entry<PinCodex.PinType>
         }
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         if (CreateCollectionEntry)
         {

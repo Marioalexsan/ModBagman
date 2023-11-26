@@ -199,7 +199,7 @@ public class EnemyEntry : Entry<EnemyCodex.EnemyTypes>
         set => Vanilla.enCategory = value;
     }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         Vanilla.enType = GameID;
 
@@ -236,7 +236,7 @@ public class EnemyEntry : Entry<EnemyCodex.EnemyTypes>
         Globals.Game.EXT_AddMiscText("Enemies", Vanilla.sDetailedDescriptionLibraryHandle, Vanilla.sDetailedDescription);
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Enemy instances have their assets cleared due to using the world region content manager
 

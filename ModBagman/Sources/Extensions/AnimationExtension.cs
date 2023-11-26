@@ -55,10 +55,7 @@ public static class AnimationExtension
             iLoopResets = default
         };
 
-        if (anim.lxAnimationInstructions != null)
-        {
-            anim.lxAnimationInstructions.ForEach(x => clone.lxAnimationInstructions.Add(x.Clone()));
-        }
+        anim.lxAnimationInstructions?.ForEach(x => clone.lxAnimationInstructions.Add(x.Clone()));
 
         anim.Reset();
 

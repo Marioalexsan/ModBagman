@@ -34,12 +34,12 @@ public class SpellEntry : Entry<SpellCodex.SpellTypes>
     /// </summary>
     public bool IsMeleeSkill { get; set; }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         // Nothing for now
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Nothing for now
     }

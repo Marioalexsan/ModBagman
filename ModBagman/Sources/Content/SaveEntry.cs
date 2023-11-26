@@ -72,12 +72,12 @@ public class SaveEntry : Entry<CustomEntryID.SaveID>
     }
     private LoadCallback _arcadeLoad;
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Nothing to do
     }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         // Nothing to do
     }

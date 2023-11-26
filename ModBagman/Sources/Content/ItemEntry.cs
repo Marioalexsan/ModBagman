@@ -394,7 +394,7 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
         FacegearOffsets[3] = left;
     }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         vanillaItem.enType = GameID;
 
@@ -502,7 +502,7 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
         // Textures are loaded on demand
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         Globals.Game.EXT_RemoveMiscText("Items", vanillaItem.sNameLibraryHandle);
         Globals.Game.EXT_RemoveMiscText("Items", vanillaItem.sDescriptionLibraryHandle);

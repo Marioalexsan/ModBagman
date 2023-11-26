@@ -63,12 +63,12 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
             ?? Entries.Commands.FirstOrDefault(x => FuzzyMatch(x.Alias, target))?.Mod;
     }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         // Nothing to do
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Nothing to do
     }

@@ -31,12 +31,12 @@ public class LevelEntry : Entry<Level.ZoneEnum>
     /// </summary>
     public Level.WorldRegion WorldRegion { get; set; }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         // Nothing for now
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Nothing for now
     }

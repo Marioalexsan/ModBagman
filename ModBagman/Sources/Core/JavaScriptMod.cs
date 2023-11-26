@@ -64,7 +64,7 @@ internal class JavaScriptMod : Mod, IDisposable
             throw new InvalidOperationException("Name or version was not specified.");
 
         _jsThis = JsValue.FromObject(_engine, this);
-        Logger = Program.LogFactory.CreateLogger(Name);
+        Logger = Program.CreateLogFactory(false).CreateLogger(Name);
 
         ListedDependencies = ((IDictionary<string, object>)GetJSProperty("dependencies").ToObject())
             .ToDictionary(x => x.Key, x => (string)x.Value);

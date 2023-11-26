@@ -9,7 +9,6 @@ namespace ModBagman;
 public static class ContentManagerExtensions
 {
     public const string ModContentPrefix = "ModContent://";
-    public const string ModContentLocation = "ModContent/";
 
     private static readonly FieldInfo s_disposableAssetsField = AccessTools.Field(typeof(ContentManager), "disposableAssets");
     private static readonly FieldInfo s_loadedAssetsField = AccessTools.Field(typeof(ContentManager), "loadedAssets");
@@ -20,7 +19,7 @@ public static class ContentManagerExtensions
     /// </summary>
     public static bool IsModContentPath(this ContentManager _, string assetPath)
     {
-        return assetPath != null && assetPath.Trim().Replace('/', '\\').StartsWith("ModContent://");
+        return assetPath != null && assetPath.Trim().Replace('/', '\\').StartsWith(ModContentPrefix);
     }
 
     /// <summary>
@@ -78,7 +77,7 @@ public static class ContentManagerExtensions
 
         GetContentManagerFields(manager, out List<IDisposable> disposableAssets, out Dictionary<string, object> loadedAssets);
 
-        string cleanedPath = Path.Combine(ModContentLocation, assetPath[..ModContentPrefix.Length]);
+        string cleanedPath = Path.Combine(Globals.ModContentPath, assetPath[..ModContentPrefix.Length]);
 
         if (typeof(T) == typeof(Texture2D))
         {
@@ -111,10 +110,6 @@ public static class ContentManagerExtensions
         }
     }
 
-    /// <summary>
-    /// Experimental internal method that unloads all modded assets from a manager.
-    /// Modded assets are assets for which <see cref="ModUtils.IsModContentPath(string)"/> returns true.
-    /// </summary>
     internal static void UnloadModContentPathAssets(this ContentManager manager)
     {
         GetContentManagerFields(manager, out List<IDisposable> disposableAssets, out Dictionary<string, object> loadedAssets);

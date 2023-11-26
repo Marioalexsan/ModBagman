@@ -8,7 +8,7 @@ internal static class VanillaParser
 {
     public static CurseEntry ParseCurse(this VanillaMod vanillaMod, RogueLikeMode.TreatsCurses gameID)
     {
-        OriginalMethods._RogueLike_GetTreatCurseInfo(Globals.Game, gameID, out var nameHandle, out var descHandle, out var scoreModifier);
+        Original_Game1._RogueLike_GetTreatCurseInfo(Globals.Game, gameID, out var nameHandle, out var descHandle, out var scoreModifier);
 
         return new()
         {
@@ -37,7 +37,7 @@ internal static class VanillaParser
 
         if (gameID == EnemyCodex.EnemyTypes.TimeTemple_GiantWorm_Recolor)
         {
-            var desc = OriginalMethods.GetEnemyDescription(EnemyCodex.EnemyTypes.TimeTemple_GiantWorm);
+            var desc = Original_EnemyCodex.GetEnemyDescription(EnemyCodex.EnemyTypes.TimeTemple_GiantWorm);
 
             // Recolored worm borrows its enemy description!
             entry.Vanilla = new EnemyDescription(gameID, desc.sNameLibraryHandle, desc.iLevel, desc.iMaxHealth)
@@ -59,7 +59,7 @@ internal static class VanillaParser
         }
         else
         {
-            entry.Vanilla = OriginalMethods.GetEnemyDescription(gameID);
+            entry.Vanilla = Original_EnemyCodex.GetEnemyDescription(gameID);
             entry.CreateJournalEntry = EnemyCodex.lxSortedDescriptions.Contains(entry.Vanilla);
         }
 
@@ -67,7 +67,7 @@ internal static class VanillaParser
         entry.DisplayBackgroundPath = null;
         entry.DisplayIconPath = null;
 
-        entry.CardIllustrationPath = OriginalMethods.GetIllustrationPath(gameID);
+        entry.CardIllustrationPath = Original_CardCodex.GetIllustrationPath(gameID);
 
         entry.Constructor = null;
         entry.DifficultyScaler = null;
@@ -110,14 +110,14 @@ internal static class VanillaParser
             Mod = vanillaMod,
             GameID = gameID,
             ModID = gameID.ToString(),
-            vanillaItem = OriginalMethods.GetItemDescription(gameID)
+            vanillaItem = Original_ItemCodex.GetItemDescription(gameID)
         };
 
         EquipmentInfo equip = null;
 
         if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Weapon))
         {
-            var weapon = OriginalMethods.GetWeaponInfo(gameID);
+            var weapon = Original_WeaponCodex.GetWeaponInfo(gameID);
             equip = weapon;
             entry.EquipType = EquipmentType.Weapon;
 
@@ -126,17 +126,17 @@ internal static class VanillaParser
         }
         else if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Shield))
         {
-            equip = OriginalMethods.GetShieldInfo(gameID);
+            equip = Original_EquipmentCodex.GetShieldInfo(gameID);
             entry.EquipType = EquipmentType.Shield;
         }
         else if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Armor))
         {
-            equip = OriginalMethods.GetArmorInfo(gameID);
+            equip = Original_EquipmentCodex.GetArmorInfo(gameID);
             entry.EquipType = EquipmentType.Armor;
         }
         else if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Hat))
         {
-            var hat = OriginalMethods.GetHatInfo(gameID);
+            var hat = Original_HatCodex.GetHatInfo(gameID);
             equip = hat;
             entry.EquipType = EquipmentType.Hat;
 
@@ -152,7 +152,7 @@ internal static class VanillaParser
         }
         else if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Facegear))
         {
-            var facegear = OriginalMethods.GetFacegearInfo(gameID);
+            var facegear = Original_FacegearCodex.GetHatInfo(gameID);
             equip = facegear;
             entry.EquipType = EquipmentType.Facegear;
 
@@ -165,12 +165,12 @@ internal static class VanillaParser
         }
         else if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Shoes))
         {
-            equip = OriginalMethods.GetShoesInfo(gameID);
+            equip = Original_EquipmentCodex.GetShoesInfo(gameID);
             entry.EquipType = EquipmentType.Shoes;
         }
         else if (entry.vanillaItem.lenCategory.Contains(ItemCodex.ItemCategories.Accessory))
         {
-            equip = OriginalMethods.GetAccessoryInfo(gameID);
+            equip = Original_EquipmentCodex.GetAccessoryInfo(gameID);
             entry.EquipType = EquipmentType.Accessory;
         }
 
@@ -200,7 +200,7 @@ internal static class VanillaParser
 
         try
         {
-            worldRegion = OriginalMethods.GetBlueprint(gameID).enRegion;
+            worldRegion = Original_LevelBlueprint.GetBlueprint(gameID).enRegion;
         }
         catch { }
 
@@ -277,8 +277,8 @@ internal static class VanillaParser
             // Hey, do you like ultra hacky code?
             ConditionToDrop = () =>
             {
-                _ = OriginalMethods.FillRandomPinList(Globals.Game);
-                return OriginalMethods.LastRandomPinList.Contains(gameID);
+                _ = EditedMethods.FillRandomPinList(Globals.Game);
+                return EditedMethods.LastRandomPinList.Contains(gameID);
             },
             CreateCollectionEntry = GameObjectStuff.OriginalPinCollection.Contains(gameID)
         };
@@ -286,7 +286,7 @@ internal static class VanillaParser
 
     public static QuestEntry ParseQuest(this VanillaMod vanillaMod, QuestCodex.QuestID gameID)
     {
-        var desc = OriginalMethods.GetQuestDescription(gameID);
+        var desc = Original_QuestCodex.GetQuestDescription(gameID);
 
         return new()
         {
@@ -308,9 +308,9 @@ internal static class VanillaParser
             Mod = vanillaMod,
             GameID = gameID,
             ModID = gameID.ToString(),
-            IsMagicSkill = OriginalMethods.SpellIsMagicSkill(gameID),
-            IsMeleeSkill = OriginalMethods.SpellIsMeleeSkill(gameID),
-            IsUtilitySkill = OriginalMethods.SpellIsUtilitySkill(gameID),
+            IsMagicSkill = Original_SpellCodex.IsMagicSkill(gameID),
+            IsMeleeSkill = Original_SpellCodex.IsMeleeSkill(gameID),
+            IsUtilitySkill = Original_SpellCodex.IsUtilitySkill(gameID),
 
             Builder = null
         };
@@ -323,7 +323,8 @@ internal static class VanillaParser
             Mod = vanillaMod,
             GameID = gameID,
             ModID = gameID.ToString(),
-            TexturePath = null
+            TexturePath = null,
+            TextureLoader = () => Original_HudRenderComponent.GetBuffTexture(Globals.Game.xHUD, gameID)
         };
     }
 

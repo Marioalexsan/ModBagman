@@ -44,7 +44,7 @@ public class PerkEntry : Entry<RogueLikeMode.Perks>
     /// </summary>
     public Func<bool> UnlockCondition { get; set; }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         if (!IsVanilla)
         {
@@ -57,7 +57,7 @@ public class PerkEntry : Entry<RogueLikeMode.Perks>
         // Texture on demand
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         Globals.Game.EXT_RemoveMiscText("Menus", "Perks_Name_" + TextEntry);
         Globals.Game.EXT_RemoveMiscText("Menus", "Perks_Description_" + TextEntry);

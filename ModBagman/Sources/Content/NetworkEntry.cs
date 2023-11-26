@@ -15,12 +15,12 @@ public class NetworkEntry : Entry<CustomEntryID.NetworkID>
 
     public Dictionary<ushort, ClientSideParser> ClientSide { get; } = new Dictionary<ushort, ClientSideParser>();
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         // Nothing to do
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Nothing to do
     }

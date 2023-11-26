@@ -52,7 +52,7 @@ public class CurseEntry : Entry<RogueLikeMode.TreatsCurses>
     /// </summary>
     public float ScoreModifier { get; set; }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         nameHandle = $"TreatCurse_{(int)GameID}_Name";
         descriptionHandle = $"TreatCurse_{(int)GameID}_Description";
@@ -63,7 +63,7 @@ public class CurseEntry : Entry<RogueLikeMode.TreatsCurses>
         // Texture on demand
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         Globals.Game.EXT_RemoveMiscText("Menus", nameHandle);
         Globals.Game.EXT_RemoveMiscText("Menus", descriptionHandle);

@@ -2,7 +2,7 @@
 
 namespace ModBagman;
 
-public static class ModBagmanResources
+internal static class ModBagmanResources
 {
     public static void ReloadResources()
     {

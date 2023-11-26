@@ -7,51 +7,15 @@ namespace ModBagman;
 
 internal static class Program
 {
-    public const string AlertNotice = """
-                ┌────────────────────────────────────────────────────────────────────────┐
-                │  ________      ___           _______       ________      _________     │
-                │ |\   __  \    |\  \         |\  ___ \     |\   __  \    |\___   ___\   │
-                │ \ \  \|\  \   \ \  \        \ \   __/|    \ \  \|\  \   \|___ \  \_|   │
-                │  \ \   __  \   \ \  \        \ \  \_|/__   \ \   _  _\       \ \  \    │
-                │   \ \  \ \  \   \ \  \____    \ \  \_|\ \   \ \  \\  \|       \ \  \   │
-                │    \ \__\ \__\   \ \_______\   \ \_______\   \ \__\\ _\        \ \__\  │
-                │     \|__|\|__|    \|_______|    \|_______|    \|__|\|__|        \|__|  │
-                │                                                                        │
-                └────────────────────────────────────────────────────────────────────────┘
-                """;
-
-    public const string CopySavesNotice = """
-                ┌────────────────────────────────────────────────────────────────────────┐
-                │                                                                        │
-                │      Seems like this is the first time you're using ModBagman!         │
-                │      The mod tool uses a separate save location from vanilla SoG.      │
-                │      Would you like to copy over your saves from the base game?        │
-                │                                                                        │
-                │      SoG savepath:       %appdata%\Secrets of Grindea\                 │
-                │      ModBagman savepath: %appdata%\ModBagman\                          │
-                │                                                                        │
-                │                                                                        │
-                │                  [Y] Hell yeah!    [N] Nah, don't.                     │
-                └────────────────────────────────────────────────────────────────────────┘
-                """;
-
-    public const string SavesCopiedSuccessfullyNotice = """
-                    ┌────────────────────────────────────────────────────────────────────────┐
-                    │                                                                        │
-                    │                            Saves copied!                               │
-                    │                                                                        │
-                    └────────────────────────────────────────────────────────────────────────┘
-                    """;
-
     public static Harmony HarmonyInstance { get; } = new Harmony("ModBagman");
 
     public static DateTime LaunchTime { get; private set; }
 
-    public static ILoggerFactory LogFactory { get; } = LoggerFactory.Create(config =>
+    public static ILoggerFactory CreateLogFactory(bool multiLine) => LoggerFactory.Create(config =>
     {
         config.AddSimpleConsole(consoleConfig =>
         {
-            consoleConfig.SingleLine = true;
+            consoleConfig.SingleLine = !multiLine;
         });
     });
 
@@ -86,7 +50,9 @@ internal static class Program
         }
     }
 
-    public static ILogger Logger { get; } = LogFactory.CreateLogger("ModBagman");
+    public static ILogger Logger { get; } = CreateLogFactory(false).CreateLogger("ModBagman");
+
+    public static ILogger ExceptionLogger { get; } = CreateLogFactory(true).CreateLogger("ModBagman");
 
     internal static bool HasCrashed { get; set; } = false;
 
@@ -129,11 +95,11 @@ internal static class Program
             var lastBack = Console.BackgroundColor;
 
             SetColors(ConsoleColor.Yellow, ConsoleColor.DarkBlue);
-            Console.WriteLine(AlertNotice);
+            Console.WriteLine(AsciiArtResources.AlertNotice);
             Console.WriteLine();
 
             SetColors(ConsoleColor.Yellow, ConsoleColor.DarkBlue);
-            Console.WriteLine(CopySavesNotice);
+            Console.WriteLine(AsciiArtResources.CopySavesNotice);
             Console.WriteLine();
 
             ConsoleKeyInfo c;
@@ -164,7 +130,7 @@ internal static class Program
                     File.Copy(Path.Combine(vanilla, "arcademode.sav"), Path.Combine(Globals.AppDataPath, "arcademode.sav"), true);
 
                 SetColors(ConsoleColor.Yellow, ConsoleColor.DarkBlue);
-                Console.WriteLine(SavesCopiedSuccessfullyNotice);
+                Console.WriteLine(AsciiArtResources.SavesCopiedSuccessfullyNotice);
             }
 
             SetColors(lastFore, lastBack);
@@ -178,7 +144,7 @@ internal static class Program
         _ = typeof(Game1);
 
         Directory.CreateDirectory("Mods");
-        Directory.CreateDirectory("Content/ModContent");
+        Directory.CreateDirectory("ModContent");
         _configBuilder = new ConfigurationBuilder().AddJsonFile(GetConfigPath());
 
         Logger.LogInformation("Applying Patches...");

@@ -5,8 +5,38 @@ using Microsoft.Extensions.Logging;
 namespace ModBagman.HarmonyPatches;
 
 [HarmonyPatch]
-public static class EditedMethods
+internal static class EditedMethods
 {
+    /// <!-- nodoc -->
+    public static List<PinCodex.PinType> LastRandomPinList { get; private set; } = new();
+
+    /// <!-- nodoc -->
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(Game1), nameof(Game1._RogueLike_GetRandomPin))]
+    public static PinCodex.PinType FillRandomPinList(Game1 __instance, Random randOverride = null)
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> codeList = instructions.ToList();
+
+            int start = codeList.FindPosition((code, pos) => code[pos].opcode == OpCodes.Ldc_I4_0, 1) - 2;
+            int end = codeList.Count;
+
+            var labels = codeList[start].ExtractLabels();
+
+            return codeList.InsertAt(start, new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldloc_1).WithLabels(labels),
+                new CodeInstruction(OpCodes.Call, AccessTools.PropertySetter(typeof(EditedMethods), nameof(LastRandomPinList))),
+                new CodeInstruction(OpCodes.Ldc_I4_0),
+                new CodeInstruction(OpCodes.Ret)
+            });
+        }
+
+        _ = Transpiler(null);
+        throw new InvalidOperationException("Stub method.");
+    }
+
     [HarmonyReversePatch]
     [HarmonyPatch(typeof(EnemyCodex), nameof(EnemyCodex.GetEnemyInstance_CacuteForward))]
     public static Enemy GetModdedEnemyInstance(EnemyCodex.EnemyTypes enType, Level.WorldRegion enOverrideContent)

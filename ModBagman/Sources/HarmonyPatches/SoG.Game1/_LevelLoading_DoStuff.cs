@@ -8,7 +8,7 @@ static class _LevelLoading_DoStuff
         var entry = Entries.Levels.Get(enLevel);
 
         if (entry.Loader == null && entry.IsVanilla)
-            OriginalMethods._LevelLoading_DoStuff(__instance, enLevel, bStaticOnly);
+            Original_Game1._LevelLoading_DoStuff(__instance, enLevel, bStaticOnly);
 
         else EditedMethods._LevelLoading_DoStuff(__instance, enLevel, bStaticOnly);
         return false;

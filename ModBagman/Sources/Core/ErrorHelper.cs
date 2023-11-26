@@ -67,7 +67,7 @@ internal static class ErrorHelper
     internal static void ForceExit(Exception exception, bool skipLogging = false)
     {
         Program.Logger.LogCritical("ModBagman crashed!");
-        Program.Logger.LogCritical("{Exception}", exception);
+        Program.ExceptionLogger.LogCritical(exception, "");
 
         if (!skipLogging)
             LogException(exception);

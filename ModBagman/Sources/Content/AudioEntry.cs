@@ -14,27 +14,27 @@ namespace ModBagman;
 /// Depending on what you do, you will need the following wave banks in the "Sound" folder:
 /// <list type="bullet">
 ///     <item>
-///         <term>{<see cref="Mod.Name"/>}Effects.xwb</term>
+///         <term>{<see cref="Mod.Name"/>}_Effects.xwb</term>
 ///         <description>The universal effect wave bank that will persist in memory until exit</description>
 ///     </item>
 ///     <item>
-///         <term>{<see cref="Mod.Name"/>}Effects{Region}.xwb</term>
+///         <term>{<see cref="Mod.Name"/>}_Effects{Region}.xwb</term>
 ///         <description>A regional effect wave bank that will be loaded on demand</description>
 ///     </item>
 ///     <item>
-///         <term>{<see cref="Mod.Name"/>}Effects.xsb</term>
+///         <term>{<see cref="Mod.Name"/>}_Effects.xsb</term>
 ///         <description>The sound bank used for effects</description>
 ///     </item>
 ///     <item>
-///         <term>{<see cref="Mod.Name"/>}Music.xwb</term>
+///         <term>{<see cref="Mod.Name"/>}_Music.xwb</term>
 ///         <description>The universal music wave bank that will persist in memory until exit</description>
 ///     </item>
 ///     <item>
-///         <term>{<see cref="Mod.Name"/>}Music{Region}.xwb</term>
+///         <term>{<see cref="Mod.Name"/>}_Music{Region}.xwb</term>
 ///         <description>A regional effect wave bank that will be loaded on demand</description>
 ///     </item>
 ///     <item>
-///         <term>{<see cref="Mod.Name"/>}Music.xsb</term>
+///         <term>{<see cref="Mod.Name"/>}_Music.xsb</term>
 ///         <description>The sound bank used for music</description>
 ///     </item>
 /// </list> 
@@ -241,7 +241,7 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
         }
     }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         var audioEngine = new SoundSystemWrapper(Globals.Game.xSoundSystem).AudioEngine;
 
@@ -265,7 +265,7 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
         }
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         if (IsModded)
         {

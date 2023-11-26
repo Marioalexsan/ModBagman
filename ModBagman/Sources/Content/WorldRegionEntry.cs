@@ -10,14 +10,14 @@ public class WorldRegionEntry : Entry<Level.WorldRegion>
 {
     internal WorldRegionEntry() { }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         var content = Globals.Game.Content;
 
         Globals.Game.xLevelMaster.denxRegionContent.Add(GameID, new ContentManager(content.ServiceProvider, content.RootDirectory));
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         Globals.Game.xLevelMaster.denxRegionContent.TryGetValue(GameID, out var manager);
 

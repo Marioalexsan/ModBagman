@@ -52,9 +52,9 @@ public abstract class Entry<IDType> where IDType : struct, Enum
         }
     }
 
-    protected abstract void Initialize();
+    internal abstract void Initialize();
 
-    protected abstract void Cleanup();
+    internal abstract void Cleanup();
 }
 
 internal static class Entries

@@ -1,4 +1,6 @@
-﻿namespace ModBagman;
+﻿using Microsoft.Xna.Framework.Graphics;
+
+namespace ModBagman;
 
 /// <summary>
 /// Represents a modded status effect.
@@ -12,17 +14,25 @@ public class StatusEffectEntry : Entry<BaseStats.StatusEffectSource>
     internal StatusEffectEntry() { }
 
     /// <summary>
-    /// Gets or sets the icon's texture path. The texture path is relative to "Config/".
+    /// Gets or sets the icon's texture path.
     /// A null or empty string will load NullTex instead.
+    /// If specified, <see cref="TextureLoader"/> takes priority over <see cref="TexturePath"/>.
     /// </summary>
     public string TexturePath { get; set; }
 
-    protected override void Initialize()
+    /// <summary>
+    /// Gets or sets the icon's texture loader.
+    /// A null texture will be replaced by NullTex instead.
+    /// If specified, <see cref="TextureLoader"/> has a higher priority.
+    /// </summary>
+    public Func<Texture2D> TextureLoader { get; set; }
+
+    internal override void Initialize()
     {
         // Nothing, texture is loaded on demand
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         Globals.Game.Content.UnloadIfModded(TexturePath);
     }

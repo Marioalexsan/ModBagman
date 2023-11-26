@@ -11,6 +11,7 @@ public class VanillaMod : Mod
 {
     internal override bool IsBuiltin => true;
 
+    /// <inheritdoc/>
     public const string ModName = "SoG";
 
     internal VanillaMod()
@@ -18,17 +19,21 @@ public class VanillaMod : Mod
 
     }
 
+    /// <inheritdoc/>
     public override bool DisableObjectCreation => true;
 
+    /// <inheritdoc/>
     public override Version Version => new("0.0.0.0");
 
+    /// <inheritdoc/>
     public override string Name => ModName;
 
+    /// <inheritdoc/>
     public override void Load()
     {
         SetupAudio();
 
-        OriginalMethods.FillTreatList(Globals.Game.xShopMenu.xTreatCurseMenu);
+        Original_ShopMenu_TreatCurseMenu.FillTreatList(Globals.Game.xShopMenu.xTreatCurseMenu);
         ParseEntries<RogueLikeMode.TreatsCurses, CurseEntry>(this.ParseCurse);
 
         ParseEntries<EnemyCodex.EnemyTypes, EnemyEntry>(this.ParseEnemy);
@@ -42,7 +47,7 @@ public class VanillaMod : Mod
 
         ParseEntries<Level.ZoneEnum, LevelEntry>(this.ParseLevel);
 
-        OriginalMethods.PerkInfoInit();
+        Original_RoguelikeMode_PerkInfo.Init();
         ParseEntries<RogueLikeMode.Perks, PerkEntry>(this.ParsePerk);
         RogueLikeMode.PerkInfo.lxAllPerks.Clear();
 
@@ -57,6 +62,7 @@ public class VanillaMod : Mod
         ParseEntries<Level.WorldRegion, WorldRegionEntry>(this.ParseWorldRegion);
     }
 
+    /// <inheritdoc/>
     public override void Unload()
     {
         return;

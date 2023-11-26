@@ -66,7 +66,7 @@ public abstract partial class Mod
     /// <summary>
     /// Gets the default logger for this mod.
     /// </summary>
-    public ILogger Logger { get; protected set; } = Program.LogFactory.CreateLogger("UnknownMod");
+    public ILogger Logger { get; protected set; } = Program.CreateLogFactory(false).CreateLogger("UnknownMod");
 
     /// <summary>
     /// Gets the path to the mod's assets, relative to the "ModContent" folder.
@@ -83,6 +83,17 @@ public abstract partial class Mod
     {
     }
 
+    /// <summary>
+    /// Gets an active mod using its nameID.
+    /// Returns null if the mod isn't currently loaded.
+    /// </summary>
+    /// <param name="nameID">The NameID of the mod.</param>
+    /// <returns></returns>
+    public Mod GetMod(string nameID)
+    {
+        return ModManager.Mods.FirstOrDefault(x => x.Name == nameID);
+    }
+
     internal void ValidateAndSetup()
     {
         if (Name == null)
@@ -97,6 +108,6 @@ public abstract partial class Mod
         if (!NameRegex.IsMatch(Name))
             throw new InvalidOperationException($"Mod identifier {Name} cannot be used as an identifier. Names must follow the following regex: {NameRegexString}.");
 
-        Logger = Program.LogFactory.CreateLogger(Name);
+        Logger = Program.CreateLogFactory(false).CreateLogger(Name);
     }
 }

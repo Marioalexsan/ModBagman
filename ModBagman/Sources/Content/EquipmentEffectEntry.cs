@@ -26,12 +26,12 @@ public class EquipmentEffectEntry : Entry<EquipmentInfo.SpecialEffect>
 
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         // Nothing for now
     }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         // Nothing for now
     }

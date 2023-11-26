@@ -61,7 +61,7 @@ public class QuestEntry : Entry<QuestCodex.QuestID>
     /// </summary>
     public Action<Quest> Constructor { get; set; }
 
-    protected override void Initialize()
+    internal override void Initialize()
     {
         if (!IsVanilla)
         {
@@ -75,7 +75,7 @@ public class QuestEntry : Entry<QuestCodex.QuestID>
         Globals.Game.EXT_AddMiscText("Quests", Vanilla.sDescriptionReference, Description);
     }
 
-    protected override void Cleanup()
+    internal override void Cleanup()
     {
         Globals.Game.EXT_RemoveMiscText("Quests", Vanilla.sQuestNameReference);
         Globals.Game.EXT_RemoveMiscText("Quests", Vanilla.sSummaryReference);
