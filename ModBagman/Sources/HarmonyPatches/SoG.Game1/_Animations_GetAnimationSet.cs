@@ -13,7 +13,7 @@ static class _Animations_GetAnimationSet
         __result = new PlayerAnimationTextureSet
         {
             bWeaponOnTop = bWeaponOnTop,
-            txBase = VanillaContent.TryLoad<Texture2D>($"Sprites/Heroes/{sAnimation}/{sDirection}")
+            txBase = VanillaContent.TryLoadWithModSupport<Texture2D>($"Sprites/Heroes/{sAnimation}/{sDirection}")
         };
 
         if (bWithShield)
@@ -36,7 +36,7 @@ static class _Animations_GetAnimationSet
                     $"Sprites/Heroes/{sAnimation}/Shields/{shield.sResourceName}/{sDirection}" :
                     $"{shield.sResourceName}/{sAnimation}/{sDirection}";
 
-                __result.txShield = VanillaContent.TryLoad<Texture2D>(pathToUse);
+                __result.txShield = VanillaContent.TryLoadWithModSupport<Texture2D>(pathToUse);
             }
         }
 

@@ -70,7 +70,7 @@ public static class AnimationExtension
     /// </summary>
     public static Animation LoadTexture(this Animation anim, ContentManager manager, string path)
     {
-        anim.txTexture = manager.TryLoad<Texture2D>(path);
+        anim.txTexture = manager.TryLoadWithModSupport<Texture2D>(path);
         return anim;
     }
 
@@ -79,7 +79,7 @@ public static class AnimationExtension
     /// </summary>
     public static Animation LoadTwilightTexture(this Animation anim, ContentManager manager, string path)
     {
-        anim.txTwilightTexture = manager.TryLoad<Texture2D>(path);
+        anim.txTwilightTexture = manager.TryLoadWithModSupport<Texture2D>(path);
         return anim;
     }
 

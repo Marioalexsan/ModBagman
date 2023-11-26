@@ -16,6 +16,17 @@ static class PlayCue
         yield return AccessTools.Method(typeof(SoundSystem), nameof(SoundSystem.PlayCue), new[] { typeof(string), typeof(IEntity), typeof(bool), typeof(bool) });
     }
 
+    static void Prefix(ref string sCueName)
+    {
+        var redirects = AudioEntry.EffectRedirects;
+        string audioIDToUse = sCueName;
+
+        if (redirects.ContainsKey(audioIDToUse))
+            audioIDToUse = redirects[audioIDToUse];
+
+        sCueName = audioIDToUse;
+    }
+
     internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code, ILGenerator gen)
     {
         var codeList = code.ToList();

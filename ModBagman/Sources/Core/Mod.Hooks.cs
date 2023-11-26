@@ -26,13 +26,6 @@ public abstract partial class Mod
     /// </remarks>
     public abstract void Unload();
 
-    public class GameEvent
-    {
-        public bool WillExecute { get; private set; } = true;
-
-        public void Prevent() => WillExecute = false;
-    }
-
     public class OnEntityDamageData
     {
         public IEntity Entity { get; init; }

@@ -133,6 +133,9 @@ internal static class Entries
     public static EntryManager<QuestCodex.QuestID, QuestEntry> Quests
         => Manager<QuestCodex.QuestID, QuestEntry>();
 
+    public static EntryManager<CustomEntryID.SaveID, SaveEntry> Saves
+        => Manager<CustomEntryID.SaveID, SaveEntry>();
+
     public static EntryManager<SpellCodex.SpellTypes, SpellEntry> Spells
         => Manager<SpellCodex.SpellTypes, SpellEntry>();
 

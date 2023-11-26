@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using Microsoft.Extensions.Logging;
-using static SoG.HitEffectMap;
 
 namespace ModBagman;
 
@@ -81,6 +80,7 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
         public override string ToString() => $"Mod_{ModIndex}_{AudioIndex}";
     }
 
+    internal static Dictionary<string, string> EffectRedirects { get; } = new Dictionary<string, string>();
     internal static Dictionary<string, string> MusicRedirects { get; } = new Dictionary<string, string>();
 
     internal SoundBank EffectsSoundBank;       // "<Mod>_Effects.xsb"
@@ -104,6 +104,8 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
 
     public void SetMusicBankStreamingMode(string bankName, bool useStreaming)
     {
+        ErrorHelper.ThrowIfNotLoading(Mod);
+
         bool currentlyUseStreaming = MusicWaveBanksToStream.Contains(bankName);
 
         if (!currentlyUseStreaming && useStreaming)
@@ -219,6 +221,23 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
         {
             Program.Logger.LogWarning("Set music redirect {inboundMusic} -> {outboundMusic}", inboundMusic, outboundMusic);
             MusicRedirects[inboundMusic] = outboundMusic;
+        }
+    }
+
+    public void RedirectEffect(string inboundEffect, string outboundEffect)
+    {
+        ErrorHelper.ThrowIfLoading(Mod);
+
+        if (outboundEffect == null)
+        {
+            Program.Logger.LogWarning("Removed music redirect for {inboundMusic}.", inboundEffect);
+            EffectRedirects.Remove(inboundEffect);
+            return;
+        }
+        else
+        {
+            Program.Logger.LogWarning("Set music redirect {inboundMusic} -> {outboundMusic}", inboundEffect, outboundEffect);
+            EffectRedirects[inboundEffect] = outboundEffect;
         }
     }
 

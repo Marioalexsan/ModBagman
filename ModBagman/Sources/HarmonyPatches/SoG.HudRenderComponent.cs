@@ -27,7 +27,7 @@ static class SoG_HudRenderComponent
         if (entry.TexturePath == null && entry.IsVanilla)
             return true;
 
-        __result = string.IsNullOrEmpty(entry.TexturePath) ? RenderMaster.txNullTex : Globals.Game.Content.TryLoad<Texture2D>(entry.TexturePath);
+        __result = string.IsNullOrEmpty(entry.TexturePath) ? RenderMaster.txNullTex : Globals.Game.Content.TryLoadWithModSupport<Texture2D>(entry.TexturePath);
         return false;
     }
 }

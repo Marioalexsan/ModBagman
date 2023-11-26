@@ -24,10 +24,10 @@ static class ChangeSongRegionIfNecessary
         string currentMusicBankName = wSystem.System.sCurrentMusicWaveBank;
         WaveBank currentMusicBank = wSystem.CurrentMusicWaveBank;
 
-        Program.Logger.LogInformation("Trying to load " + sSongName + " from " + nextBankName);
+        bool currentIsUnloaded = currentMusicBank?.IsDisposed ?? true;
 
-        if (nextBankName == currentMusicBankName)
-            return false;  // We're in the same wavebank, changes shouldn't be needed
+        if (nextBankName == currentMusicBankName && !currentIsUnloaded)
+            return false;  // Wavebank is OK
 
         // Set current wavebank on standby if applicable
         if (!_Helper.IsPersistentWaveBank(currentMusicBankName))
@@ -37,6 +37,8 @@ static class ChangeSongRegionIfNecessary
 
         bool isStreamed = _Helper.IsStreamedWaveBank(nextBankName);
 
+        wSystem.System.sCurrentMusicWaveBank = nextBankName;
+
         // Set next wavebank
         if (_Helper.IsPersistentWaveBank(nextBankName))
         {
@@ -45,8 +47,6 @@ static class ChangeSongRegionIfNecessary
         }
         else
         {
-            wSystem.System.sCurrentMusicWaveBank = nextBankName;
-
             // Check if there's a bank on standby that could be ressurected
             if (wSystem.StandbyWaveBanksMusic.ContainsKey(nextBankName))
             {
@@ -56,8 +56,6 @@ static class ChangeSongRegionIfNecessary
             else // We probably need to load the new bank
             {
                 string root = entry.IsModded ? entry.Mod.AssetPath : Globals.Game.Content.RootDirectory;
-
-                Program.Logger.LogInformation("Path " + $"{root}/Sound/{nextBankName}.xwb " + isStreamed);
 
                 if (isStreamed)
                 {

@@ -35,7 +35,7 @@ static class SoG_FacegearCodex
                     }
                     else if (path != null)
                     {
-                        __result.atxTextures[index] = Globals.Game.Content.TryLoad<Texture2D>(Path.Combine(path, directions[index]));
+                        __result.atxTextures[index] = Globals.Game.Content.TryLoadWithModSupport<Texture2D>(Path.Combine(path, directions[index]));
                     }
                     else if (__result.atxTextures[index] == null)
                     {

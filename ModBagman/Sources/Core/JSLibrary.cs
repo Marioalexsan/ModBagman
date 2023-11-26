@@ -17,7 +17,7 @@ internal static class JSLibrary
     {
         // TODO Capture global variable and set placeholder to undefined
 
-        engine.AddModule("grindless", builder =>
+        engine.AddModule("modbagman", builder =>
         {
             builder.ExportType(typeof(Globals));
         });

@@ -29,7 +29,7 @@ static class SoG_HatCodex
                 {
                     if (path != null)
                     {
-                        __result.xDefaultSet.atxTextures[index] = Globals.Game.Content.TryLoad<Texture2D>(Path.Combine(path, directions[index]));
+                        __result.xDefaultSet.atxTextures[index] = Globals.Game.Content.TryLoadWithModSupport<Texture2D>(Path.Combine(path, directions[index]));
                     }
                     else
                     {
@@ -50,7 +50,7 @@ static class SoG_HatCodex
                     {
                         if (path != null && kvp.Value != null)
                         {
-                            altSet.atxTextures[index] = Globals.Game.Content.TryLoad<Texture2D>(Path.Combine(path, kvp.Value, directions[index]));
+                            altSet.atxTextures[index] = Globals.Game.Content.TryLoadWithModSupport<Texture2D>(Path.Combine(path, kvp.Value, directions[index]));
                         }
                         else
                         {

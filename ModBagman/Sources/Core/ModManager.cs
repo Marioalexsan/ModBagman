@@ -81,7 +81,7 @@ internal static class ModManager
         InGameMenu.contTempAssetManager?.Unload();
 
         // Experimental / Risky. Unloads all mod assets
-        AssetUtils.UnloadModContentPathAssets(RenderMaster.contPlayerStuff);
+        RenderMaster.contPlayerStuff.UnloadModContentPathAssets();
 
         // Reloads the english localization
         Globals.Game.xDialogueGod_Default = DialogueGod.ReadFile("Content/Data/Dialogue/defaultEnglish.dlf");

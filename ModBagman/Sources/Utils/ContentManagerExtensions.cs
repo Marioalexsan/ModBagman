@@ -1,21 +1,27 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System.IO;
 using System.Reflection;
 
 namespace ModBagman;
 
-/// <summary>
-/// Provides helper methods for loading and unloading game assets.
-/// </summary>
-public static class AssetUtils
+public static class ContentManagerExtensions
 {
+    public const string ModContentPrefix = "ModContent://";
+    public const string ModContentLocation = "ModContent/";
+
     private static readonly FieldInfo s_disposableAssetsField = AccessTools.Field(typeof(ContentManager), "disposableAssets");
-
     private static readonly FieldInfo s_loadedAssetsField = AccessTools.Field(typeof(ContentManager), "loadedAssets");
-
     private static readonly MethodInfo s_getCleanPathMethod = AccessTools.Method(AccessTools.TypeByName("Microsoft.Xna.Framework.TitleContainer"), "GetCleanPath");
+
+    /// <summary>
+    /// Returns true if the mod path starts with "ModContent\", false otherwise.
+    /// </summary>
+    public static bool IsModContentPath(this ContentManager _, string assetPath)
+    {
+        return assetPath != null && assetPath.Trim().Replace('/', '\\').StartsWith("ModContent://");
+    }
 
     /// <summary>
     /// Unloads a single asset from the given ContentManager.
@@ -48,88 +54,61 @@ public static class AssetUtils
         }
     }
 
-    public static bool UnloadIfModded(this ContentManager manager, string path)
-    {
-        if (manager.IsModContentPath(path))
-            return manager.Unload(path);
-
-        return false;
-    }
-
-    public static T TryLoad<T>(this ContentManager manager, string path)
-    where T : class
-    {
-        manager.TryLoad(path, out T asset);
-        return asset;
-    }
-
-    public static bool TryLoad<T>(this ContentManager manager, string path, out T asset)
+    public static T TryLoad<T>(this ContentManager manager, string path, bool useErrorAsset = false)
         where T : class
     {
         try
         {
-            asset = manager.Load<T>(path);
-            return true;
+            return manager.Load<T>(path);
         }
         catch (Exception e)
         {
-            if (typeof(T) == typeof(Texture2D))
-                asset = ModBagmanResources.NullTexture as T;
-
-            else asset = null;
-
             Program.Logger.LogWarning("Failed to load a {ResourceType}! Path: {Path}, Reason: {e}", typeof(T).Name, path, e.Message);
-
-            return false;
+            return useErrorAsset ? GetErrorAsset<T>() : null;
         }
     }
 
-    public static WaveBank TryLoadWaveBank(this AudioEngine engine, string path, bool streamed)
+    public static T LoadWithModSupport<T>(this ContentManager manager, string assetPath)
+        where T : class
     {
-        engine.TryLoadWaveBank(path, out WaveBank asset, streamed);
-        return asset;
+        bool isModded = manager.IsModContentPath(assetPath);
+
+        if (!isModded)
+            return manager.Load<T>(assetPath);
+
+        GetContentManagerFields(manager, out List<IDisposable> disposableAssets, out Dictionary<string, object> loadedAssets);
+
+        string cleanedPath = Path.Combine(ModContentLocation, assetPath[..ModContentPrefix.Length]);
+
+        if (typeof(T) == typeof(Texture2D))
+        {
+            using var fileStream = File.OpenRead(cleanedPath);
+
+            Texture2D texture = Texture2D.FromStream(Globals.Game.GraphicsDevice, fileStream);
+
+            loadedAssets[assetPath] = texture;
+            disposableAssets.Add(texture);
+
+            return (T)(object)texture;
+        }
+        else
+        {
+            throw new NotImplementedException($"Loading modded assets of type {typeof(T).Name} is not supported.");
+        }
     }
 
-    public static bool TryLoadWaveBank(this AudioEngine engine, string path, out WaveBank result, bool streamed)
+    public static T TryLoadWithModSupport<T>(this ContentManager manager, string assetPath, bool useErrorAsset = false)
+        where T : class
     {
         try
         {
-            result = streamed ? new WaveBank(engine, path) : new WaveBank(engine, path, 0, 16);
-            return true;
+            return manager.LoadWithModSupport<T>(assetPath);
         }
-        catch
+        catch (Exception e)
         {
-            result = null;
-            return false;
+            Program.Logger.LogWarning("Failed to load a {ResourceType}! Path: {Path}, Reason: {e}", typeof(T).Name, assetPath, e.Message);
+            return useErrorAsset ? GetErrorAsset<T>() : null;
         }
-    }
-
-    public static SoundBank TryLoadSoundBank(this AudioEngine engine, string path)
-    {
-        engine.TryLoadSoundBank(path, out SoundBank asset);
-        return asset;
-    }
-
-    public static bool TryLoadSoundBank(this AudioEngine engine, string path, out SoundBank result)
-    {
-        try
-        {
-            result = new SoundBank(engine, path);
-            return true;
-        }
-        catch
-        {
-            result = null;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Returns true if the mod path starts with "ModContent\", false otherwise.
-    /// </summary>
-    public static bool IsModContentPath(this ContentManager manager, string assetPath)
-    {
-        return assetPath != null && assetPath.Trim().Replace('/', '\\').StartsWith("ModContent\\");
     }
 
     /// <summary>
@@ -152,6 +131,14 @@ public static class AssetUtils
         }
     }
 
+    internal static bool UnloadIfModded(this ContentManager manager, string path)
+    {
+        if (manager.IsModContentPath(path))
+            return manager.Unload(path);
+
+        return false;
+    }
+
     private static void GetContentManagerFields(ContentManager manager, out List<IDisposable> disposableAssets, out Dictionary<string, object> loadedAssets)
     {
         disposableAssets = (List<IDisposable>)s_disposableAssetsField.GetValue(manager);
@@ -162,5 +149,14 @@ public static class AssetUtils
     private static string GetContentManagerCleanPath(string path)
     {
         return (string)s_getCleanPathMethod.Invoke(null, new object[] { path });
+    }
+
+    private static T GetErrorAsset<T>()
+        where T : class
+    {
+        if (typeof(T) == typeof(Texture2D))
+            return ModBagmanResources.NullTexture as T;
+
+        else return null;
     }
 }

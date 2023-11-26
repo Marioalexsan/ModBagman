@@ -18,7 +18,7 @@ static class _RogueLike_GetPerkTexture
         if (entry.TexturePath == null && entry.IsVanilla)
             return true;
 
-        __result = Globals.Game.Content.TryLoad<Texture2D>(entry.TexturePath);
+        __result = Globals.Game.Content.TryLoadWithModSupport<Texture2D>(entry.TexturePath);
         return false;
     }
 }

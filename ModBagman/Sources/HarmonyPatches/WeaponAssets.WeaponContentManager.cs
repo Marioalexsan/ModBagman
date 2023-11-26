@@ -44,7 +44,7 @@ static class WeaponAssets_WeaponContentManager
                 }
             }
 
-            __instance.ditxWeaponTextures.Add(kvp.Key, __instance.contWeaponContent.TryLoad<Texture2D>(texPath));
+            __instance.ditxWeaponTextures.Add(kvp.Key, __instance.contWeaponContent.TryLoadWithModSupport<Texture2D>(texPath));
         }
 
         return false;

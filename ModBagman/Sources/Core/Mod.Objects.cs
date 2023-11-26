@@ -27,6 +27,8 @@ public abstract partial class Mod
 
     public QuestEntry CreateQuest(string modID) => Entries.Quests.Create(this, modID);
 
+    public SaveEntry CreateSave() => Entries.Saves.Create(this, "");
+
     public SpellEntry CreateSpell(string modID) => Entries.Spells.Create(this, modID);
 
     public StatusEffectEntry CreateStatusEffect(string modID) => Entries.StatusEffects.Create(this, modID);
@@ -65,6 +67,8 @@ public abstract partial class Mod
     public PinEntry GetPin(string modID) => Entries.Pins.Get(this, modID);
 
     public QuestEntry GetQuest(string modID) => Entries.Quests.Get(this, modID);
+
+    public SaveEntry GetSave() => Entries.Saves.Get(this, "");
 
     public SpellEntry GetSpell(string modID) => Entries.Spells.Get(this, modID);
 

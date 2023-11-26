@@ -14,7 +14,7 @@
         <StartupObject>ModBagman.Program</StartupObject>
         <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
         <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
-        <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+        <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
     
     <ItemGroup>

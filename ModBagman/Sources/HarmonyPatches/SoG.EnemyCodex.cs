@@ -51,7 +51,7 @@ internal static class SoG_EnemyCodex
         if (entry.DisplayIconPath == null && entry.IsVanilla)
             return true;
 
-        __result = Content.TryLoad<Texture2D>(entry.DisplayIconPath);
+        __result = Content.TryLoadWithModSupport<Texture2D>(entry.DisplayIconPath);
         return false;
     }
 
@@ -64,7 +64,7 @@ internal static class SoG_EnemyCodex
         if (entry.DisplayBackgroundPath == null && entry.IsVanilla)
             return true;
 
-        __result = Content.TryLoad<Texture2D>(entry.DisplayBackgroundPath);
+        __result = Content.TryLoadWithModSupport<Texture2D>(entry.DisplayBackgroundPath);
         return false;
     }
 }

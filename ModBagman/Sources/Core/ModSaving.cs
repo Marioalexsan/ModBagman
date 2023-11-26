@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text;
+using System.IO.Compression;
 
 namespace ModBagman;
 
@@ -39,6 +40,7 @@ public class SaveCompatibility
         {
             return
                 ModsAdded.Count == 0 &&
+                ModsUpdated.Count == 0 &&
                 ModsRemoved.Count == 0 &&
                 LastModBagmanVersion.Major == Globals.ModBagmanVersion.Major &&
                 LastGrindeaVersion == Globals.GrindeaVersion;
@@ -95,17 +97,21 @@ public class SaveCompatibility
 
 internal static class ModSaving
 {
-    public const string SaveFileExtension = ".gs";
+    public const string SaveFileExtension = ".mod.zip";
 
     public static SaveCompatibility CheckCompatibility(Stream stream)
     {
-        MetadataFile file = LoadMetadataFile(stream);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read, false);
+
+        using var metadataStream = archive.GetEntry("metadata.json").Open();
+
+        var metadata = LoadMetadataFile(metadataStream);
 
         var loadedMods = ModManager.Mods.Where(x => !x.IsBuiltin)
             .Select(x => new ModShortInfo() { Name = x.Name, Version = x.Version })
             .ToList();
 
-        var saveMods = file.Mods;
+        var saveMods = metadata.Mods;
 
         var missingMods = saveMods
             .Where(x => !loadedMods.Any(y => y.Name == x.Name))
@@ -122,8 +128,8 @@ internal static class ModSaving
 
         return new SaveCompatibility()
         {
-            LastModBagmanVersion = file.ModBagmanVersion,
-            LastGrindeaVersion = file.GrindeaVersion,
+            LastModBagmanVersion = metadata.ModBagmanVersion,
+            LastGrindeaVersion = metadata.GrindeaVersion,
             ModsAdded = newMods,
             ModsRemoved = missingMods,
             ModsUpdated = updatedMods
@@ -146,12 +152,63 @@ internal static class ModSaving
             }).ToList()
         };
 
-        SaveMetadataFile(file, metadata);
+        using var archive = new ZipArchive(file, ZipArchiveMode.Create, false);
+
+        using var metadataStream = archive.CreateEntry("metadata.json").Open();
+
+        SaveMetadataFile(metadataStream, metadata);
+
+        foreach (var entry in Entries.Saves)
+        {
+            if (entry.CharacterSave != null)
+            {
+                try
+                {
+                    using var modStream = archive.CreateEntry($"{entry.Mod.Name}.dat").Open();
+                    entry.CharacterSave?.Invoke(modStream);
+                }
+                catch
+                {
+                    // TODO Handle error cases correctly
+                }
+            }
+        }
     }
 
     public static void LoadModCharacter(Stream file)
     {
-        ApplyMetadataFile(LoadMetadataFile(file));
+        using var archive = new ZipArchive(file, ZipArchiveMode.Read, false);
+
+        using var metadataStream = archive.GetEntry("metadata.json").Open();
+
+        var metadata = LoadMetadataFile(metadataStream);
+
+        ApplyMetadataFile(metadata);
+
+        foreach (var entry in Entries.Saves)
+        {
+            if (entry.CharacterLoad != null)
+            {
+                try
+                {
+                    var archiveEntry = archive.GetEntry($"{entry.Mod.Name}.dat");
+
+                    if (archiveEntry != null)
+                    {
+                        using var modStream = archiveEntry?.Open();
+                        entry.CharacterLoad?.Invoke(modStream, metadata.Mods.FirstOrDefault(x => x.Name == entry.Mod.Name)?.Version);
+                    }
+                    else
+                    {
+                        entry.CharacterLoad?.Invoke(null, null);
+                    }
+                }
+                catch
+                {
+                    // TODO Handle error cases correctly
+                }
+            }
+        }
     }
 
     public static void SaveModWorld(Stream file)
@@ -168,12 +225,63 @@ internal static class ModSaving
             }).ToList()
         };
 
-        SaveMetadataFile(file, metadata);
+        using var archive = new ZipArchive(file, ZipArchiveMode.Create, false);
+
+        using var metadataStream = archive.CreateEntry("metadata.json").Open();
+
+        SaveMetadataFile(metadataStream, metadata);
+
+        foreach (var entry in Entries.Saves)
+        {
+            if (entry.WorldSave != null)
+            {
+                try
+                {
+                    using var modStream = archive.CreateEntry($"{entry.Mod.Name}.dat").Open();
+                    entry.WorldSave?.Invoke(modStream);
+                }
+                catch
+                {
+                    // TODO Handle error cases correctly
+                }
+            }
+        }
     }
 
     public static void LoadModWorld(Stream file)
     {
-        ApplyMetadataFile(LoadMetadataFile(file));
+        using var archive = new ZipArchive(file, ZipArchiveMode.Read, false);
+
+        using var metadataStream = archive.GetEntry("metadata.json").Open();
+
+        var metadata = LoadMetadataFile(metadataStream);
+
+        ApplyMetadataFile(metadata);
+
+        foreach (var entry in Entries.Saves)
+        {
+            if (entry.WorldLoad != null)
+            {
+                try
+                {
+                    var archiveEntry = archive.GetEntry($"{entry.Mod.Name}.dat");
+
+                    if (archiveEntry != null)
+                    {
+                        using var modStream = archiveEntry?.Open();
+                        entry.WorldLoad?.Invoke(modStream, metadata.Mods.FirstOrDefault(x => x.Name == entry.Mod.Name)?.Version);
+                    }
+                    else
+                    {
+                        entry.WorldLoad?.Invoke(null, null);
+                    }
+                }
+                catch
+                {
+                    // TODO Handle error cases correctly
+                }
+            }
+        }
     }
 
     public static void SaveModArcade(Stream file)
@@ -193,12 +301,63 @@ internal static class ModSaving
             }).ToList()
         };
 
-        SaveMetadataFile(file, metadata);
+        using var archive = new ZipArchive(file, ZipArchiveMode.Create, false);
+
+        using var metadataStream = archive.CreateEntry("metadata.json").Open();
+
+        SaveMetadataFile(metadataStream, metadata);
+
+        foreach (var entry in Entries.Saves)
+        {
+            if (entry.ArcadeSave != null)
+            {
+                try
+                {
+                    using var modStream = archive.CreateEntry($"{entry.Mod.Name}.dat").Open();
+                    entry.ArcadeSave?.Invoke(modStream);
+                }
+                catch
+                {
+                    // TODO Handle error cases correctly
+                }
+            }
+        }
     }
 
     public static void LoadModArcade(Stream file)
     {
-        ApplyMetadataFile(LoadMetadataFile(file));
+        using var archive = new ZipArchive(file, ZipArchiveMode.Read, false);
+
+        using var metadataStream = archive.GetEntry("metadata.json").Open();
+
+        var metadata = LoadMetadataFile(metadataStream);
+
+        ApplyMetadataFile(metadata);
+
+        foreach (var entry in Entries.Saves)
+        {
+            if (entry.ArcadeLoad != null)
+            {
+                try
+                {
+                    var archiveEntry = archive.GetEntry($"{entry.Mod.Name}.dat");
+
+                    if (archiveEntry != null)
+                    {
+                        using var modStream = archiveEntry?.Open();
+                        entry.ArcadeLoad?.Invoke(modStream, metadata.Mods.FirstOrDefault(x => x.Name == entry.Mod.Name)?.Version);
+                    }
+                    else
+                    {
+                        entry.ArcadeLoad?.Invoke(null, null);
+                    }
+                }
+                catch
+                {
+                    // TODO Handle error cases correctly
+                }
+            }
+        }
     }
 
     private static void ApplyMetadataFile(MetadataFile file)

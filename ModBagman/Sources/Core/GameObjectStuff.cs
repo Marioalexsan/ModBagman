@@ -21,6 +21,7 @@ public static class CustomEntryID
     public enum AudioID { }
     public enum CommandID { }
     public enum NetworkID { }
+    public enum SaveID { }
 }
 
 /// <summary>

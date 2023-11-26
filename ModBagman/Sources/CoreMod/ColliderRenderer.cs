@@ -3,13 +3,13 @@ using Microsoft.Xna.Framework;
 
 namespace ModBagman;
 
-public class ColliderRC : RenderComponent
+public class ColliderRenderer : RenderComponent
 {
     public bool RenderCombat { get; set; }
     public bool RenderLevel { get; set; }
     public bool RenderMovement { get; set; }
 
-    public ColliderRC()
+    public ColliderRenderer()
     {
         xTransform = new TransformComponent(Vector2.Zero);
     }

@@ -7,6 +7,25 @@ namespace ModBagman.HarmonyPatches;
 [HarmonyPatch(typeof(SoundSystem), nameof(SoundSystem.PlayMixCues))]
 static class PlayMixCues
 {
+    static void Prefix(ref string sSong1, ref string sSong2)
+    {
+        var redirects = AudioEntry.EffectRedirects;
+
+        string audioIDToUse1 = sSong1;
+
+        if (redirects.ContainsKey(audioIDToUse1))
+            audioIDToUse1 = redirects[audioIDToUse1];
+
+        sSong1 = audioIDToUse1;
+
+        string audioIDToUse2 = sSong2;
+
+        if (redirects.ContainsKey(audioIDToUse2))
+            audioIDToUse2 = redirects[audioIDToUse2];
+
+        sSong2 = audioIDToUse2;
+    }
+
     static IEnumerable<CodeInstruction> PlayMixCues_Transpiler(IEnumerable<CodeInstruction> code, ILGenerator gen)
     {
         var codeList = code.ToList();
