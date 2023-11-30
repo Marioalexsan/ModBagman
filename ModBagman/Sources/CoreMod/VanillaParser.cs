@@ -67,7 +67,7 @@ internal static class VanillaParser
         entry.DisplayBackgroundPath = null;
         entry.DisplayIconPath = null;
 
-        entry.CardIllustrationPath = Original_CardCodex.GetIllustrationPath(gameID);
+        entry.CardIllustrationPath = null;
 
         entry.Constructor = null;
         entry.DifficultyScaler = null;
@@ -215,6 +215,9 @@ internal static class VanillaParser
 
     public static PerkEntry ParsePerk(this VanillaMod vanillaMod, RogueLikeMode.Perks gameID)
     {
+        // TODO This method is stupidly hardcoded.
+        // Is there any way to fix this?
+
         var perkInfo = RogueLikeMode.PerkInfo.lxAllPerks.FirstOrDefault(x => x.enPerk == gameID) ?? gameID switch
         {
             RogueLikeMode.Perks.PetWhisperer => new RogueLikeMode.PerkInfo(RogueLikeMode.Perks.PetWhisperer, 20, "PetWhisperer"),
@@ -323,8 +326,7 @@ internal static class VanillaParser
             Mod = vanillaMod,
             GameID = gameID,
             ModID = gameID.ToString(),
-            TexturePath = null,
-            TextureLoader = () => Original_HudRenderComponent.GetBuffTexture(Globals.Game.xHUD, gameID)
+            TexturePath = null
         };
     }
 

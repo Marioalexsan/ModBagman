@@ -16,16 +16,8 @@ public class StatusEffectEntry : Entry<BaseStats.StatusEffectSource>
     /// <summary>
     /// Gets or sets the icon's texture path.
     /// A null or empty string will load NullTex instead.
-    /// If specified, <see cref="TextureLoader"/> takes priority over <see cref="TexturePath"/>.
     /// </summary>
     public string TexturePath { get; set; }
-
-    /// <summary>
-    /// Gets or sets the icon's texture loader.
-    /// A null texture will be replaced by NullTex instead.
-    /// If specified, <see cref="TextureLoader"/> has a higher priority.
-    /// </summary>
-    public Func<Texture2D> TextureLoader { get; set; }
 
     internal override void Initialize()
     {

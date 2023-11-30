@@ -24,15 +24,10 @@ static class SoG_HudRenderComponent
     {
         var entry = Entries.StatusEffects.GetRequired(en);
 
-        if (entry.TextureLoader != null)
-        {
-            __result = entry.TextureLoader.Invoke() ?? RenderMaster.txNullTex;
-        }
-        else
-        {
-            __result = Globals.Game.Content.TryLoadWithModSupport<Texture2D>(entry.TexturePath, true);
-        }
+        if (entry.TexturePath == null && entry.IsVanilla)
+            return true;
 
+        __result = Globals.Game.Content.TryLoadWithModSupport<Texture2D>(entry.TexturePath, true);
         return false;
     }
 }

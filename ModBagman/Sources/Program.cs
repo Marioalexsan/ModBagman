@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
+using CommandLine;
+using CommandLine.Text;
 
 namespace ModBagman;
 
@@ -59,6 +61,20 @@ internal static class Program
     public static void Main(string[] args)
     {
         LaunchTime = DateTime.Now;
+
+        var options = ParseArguments(args);
+
+        if (options.Version)
+        {
+            Console.WriteLine($"ModBagman version {Globals.ModBagmanVersion}.");
+            return;
+        }
+
+        if (options.GenerateTypeScriptDefinitons)
+        {
+            GenerateTypeScriptDefinitions();
+            return;
+        }
 
         try
         {
@@ -197,5 +213,30 @@ internal static class Program
             if (__state.Elapsed > TimeSpan.FromSeconds(0.25))
                 Logger.LogWarning($"Patch is taking a long time! ({__state.Elapsed.TotalSeconds:F2}s) ({original.Name})");
         }
+    }
+
+    private static void GenerateTypeScriptDefinitions()
+    {
+        const string fileName = "modbagman.d.ts";
+        File.WriteAllBytes(fileName, Resources.Resources.TSDefinitionFiles);
+        Console.WriteLine($"Generated typings in {fileName}.");
+    }
+
+    private static CLIOptions ParseArguments(string[] args)
+    {
+        var parser = new Parser(config =>
+        {
+            config.HelpWriter = Console.Out;
+            config.AutoVersion = false;
+        });
+
+        var parserResult = parser.ParseArguments<CLIOptions>(args);
+           
+        parserResult.WithNotParsed((e) =>
+            {
+                Environment.Exit(1);
+            });
+
+        return parserResult.Value;
     }
 }
