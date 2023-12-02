@@ -56,7 +56,9 @@ internal class JavaScriptMod : Mod, IDisposable
             Program.Logger.LogInformation($"Loading {pair.Key}");
         }
 
-        _mod = _engine.ImportModule("index.js");
+        var module = _engine.ImportModule("index.js");
+        _mod = module.GetProperty("mod").Value.AsObject();
+
         _name = _mod.GetProperty("name").Value.AsString();
         _version = Version.Parse(_mod.GetProperty("version").Value.AsString());
 

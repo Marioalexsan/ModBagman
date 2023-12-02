@@ -1,6 +1,13 @@
 ﻿namespace ModBagman;
 
 /// <summary>
+/// Delegate that initializes a spell.
+/// </summary>
+/// <param name="powerLevel"> The spell's level. </param>
+/// <param name="overrideRegion"> The region to use for content load. A value of <see cref="Level.WorldRegion.NotLoaded"/> means "use the current region". </param>
+public delegate ISpellInstance SpellBuilder(int powerLevel, Level.WorldRegion overrideRegion);
+
+/// <summary>
 /// Represents a modded entity of type ISpellInstance.
 /// Some spells can act as player spells, and have additional information associated with them.
 /// </summary>

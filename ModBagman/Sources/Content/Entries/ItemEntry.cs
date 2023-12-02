@@ -5,6 +5,21 @@ using Stat = SoG.EquipmentInfo.StatEnum;
 namespace ModBagman;
 
 /// <summary>
+/// Defines all of the available equipment types.
+/// </summary>
+public enum EquipmentType
+{
+    None = -1,
+    Weapon = ItemCodex.ItemCategories.Weapon,
+    Shield = ItemCodex.ItemCategories.Shield,
+    Armor = ItemCodex.ItemCategories.Armor,
+    Hat = ItemCodex.ItemCategories.Hat,
+    Accessory = ItemCodex.ItemCategories.Accessory,
+    Shoes = ItemCodex.ItemCategories.Shoes,
+    Facegear = ItemCodex.ItemCategories.Facegear
+}
+
+/// <summary>
 /// Represents a modded enemy, and defines ways to create it.
 /// </summary>
 /// <remarks> 

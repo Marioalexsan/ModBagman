@@ -3,6 +3,13 @@ using System.Reflection;
 
 namespace ModBagman;
 
+/// <summary> 
+/// Delegate that parses a chat command. 
+/// </summary>
+/// <param name="args"> The argument list. </param>
+/// <param name="connection"> The connection identifier of the player. </param>
+public delegate void CommandParser(string[] args, int connection);
+
 /// <summary>
 /// Defines custom commands that can be entered from the in-game chat. <para/>
 /// All modded commands are called by using the "/{<see cref="Mod.Name"/>}:{Command} [args] format. <para/>

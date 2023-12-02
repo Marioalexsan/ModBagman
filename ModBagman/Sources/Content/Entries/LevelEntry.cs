@@ -1,6 +1,18 @@
 ﻿namespace ModBagman;
 
 /// <summary>
+/// Delegate that initializes the blueprint of a level.
+/// </summary>
+/// <param name="blueprint"> The level blueprint to initialize. </param>
+public delegate void LevelBuilder(LevelBlueprint blueprint);
+
+/// <summary>
+/// Delegate that loads a level, after objects in the level blueprint have been created.
+/// </summary>
+/// <param name="staticOnly"> Whenever to limit instantiation to static (non-networked) objects only. </param>
+public delegate void LevelLoader(bool staticOnly);
+
+/// <summary>
 /// Represents a modded level, and defines ways to create it.
 /// </summary>
 /// <remarks> 

@@ -8,7 +8,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 TARGET_ASSEMBLY = 'ModBagman.exe'
 LIDGREN_NETWORK = 'Lidgren.Network.dll'
 STEAMWORKS_NET = 'Steamworks.NET.dll'
-BIN_PATH = '../bin/x86/Debug/net472/'
+BIN_PATH = '../ModBagman/bin/x86/Debug/net472/'
+DEPS_PATH = '../Dependencies/'
 ILREPACK_PATH = os.path.abspath('ILRepack.exe')
 
 # Paths to probe for SoG installs
@@ -51,7 +52,6 @@ XNA_DEPENDENCIES = [
 GAC_COMMON_PATHS = [
     'C:/Windows/Microsoft.NET/assembly/GAC_32/'
 ]
-
 
 def merge_assemblies():
     os.chdir(BIN_PATH)
@@ -123,14 +123,14 @@ def fetch_deps():
 
     if sog_install_path is not None:
         for x in SOG_DEPENDENCIES:
-            shutil.copyfile(sog_install_path + x, '../Dependencies/' + x)
+            shutil.copyfile(sog_install_path + x, DEPS_PATH + x)
         print('Copied SoG dependencies!')
 
     if xna_install_path is not None:
         for x in XNA_DEPENDENCIES:
             base_path = xna_install_path + x + '/'
             dll_path = base_path + [x for x in os.listdir(base_path) if 'v4.0' in x][0] + '/' + x + '.dll'
-            shutil.copyfile(dll_path, '../Dependencies/' + x + '.dll')
+            shutil.copyfile(dll_path, DEPS_PATH + x + '.dll')
         print('Copied XNA dependencies!')
 
 

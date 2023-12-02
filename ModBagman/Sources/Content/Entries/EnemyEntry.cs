@@ -4,6 +4,12 @@ using Microsoft.Xna.Framework.Content;
 namespace ModBagman;
 
 /// <summary>
+/// Delegate that initializes an enemy.
+/// </summary>
+/// <param name="enemy"> The enemy to initialize. </param>
+public delegate void EnemyBuilder(Enemy enemy);
+
+/// <summary>
 /// Represents a modded enemy, and defines ways to create it.
 /// </summary>
 /// <remarks> 

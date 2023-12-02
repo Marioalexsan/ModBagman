@@ -36,9 +36,7 @@
         <PackageReference Include="System.IO.Compression" Version="4.3.0" />
         <PackageReference Include="System.Text.Json" Version="7.0.2" />
     </ItemGroup>
-
-    <!-- Custom  -->
-
+    
     <!-- System packages -->
     <ItemGroup>
         <Reference Include="Lidgren.Network">
@@ -88,7 +86,7 @@
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-        <Exec Command="python Utils/utils.py merge" />
-        <Exec Command="python Utils/utils.py install" />
+        <Exec Command="python ../Utils/utils.py merge" />
+        <Exec Command="python ../Utils/utils.py install" />
     </Target>
 </Project>

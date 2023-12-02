@@ -1,6 +1,20 @@
 ﻿namespace ModBagman;
 
 /// <summary>
+/// Delegate that parses an incoming client message.
+/// </summary>
+/// <param name="msg"> The message data. </param>
+/// <param name="connection"> The connection ID of the client. </param>
+///
+public delegate void ServerSideParser(BinaryReader msg, long connection);
+
+/// <summary>
+/// Delegate that parses an incoming server message.
+/// </summary>
+/// <param name="msg"> The message data. </param>
+public delegate void ClientSideParser(BinaryReader msg);
+
+/// <summary>
 /// Contains data for sending custom packets between clients and servers.
 /// </summary>
 /// <remarks> 

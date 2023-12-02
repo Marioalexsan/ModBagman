@@ -3,17 +3,38 @@ using Microsoft.Xna.Framework;
 
 namespace ModBagman;
 
+/// <summary>
+/// Renders colliders in a level.
+/// </summary>
 public class ColliderRenderer : RenderComponent
 {
+    /// <summary>
+    /// Should combat colliders be rendered?
+    /// </summary>
     public bool RenderCombat { get; set; }
+
+    /// <summary>
+    /// Should level colliders be rendered?
+    /// </summary>
     public bool RenderLevel { get; set; }
+
+    /// <summary>
+    /// Should movement colliders be rendered?
+    /// </summary>
     public bool RenderMovement { get; set; }
 
+    /// <summary>
+    /// Creates a new collider renderer.
+    /// </summary>
     public ColliderRenderer()
     {
         xTransform = new TransformComponent(Vector2.Zero);
     }
 
+    /// <summary>
+    /// Renders the colliders in the level based on current settings.
+    /// </summary>
+    /// <param name="spriteBatch">Spritebatch to use for rendering</param>
     public override void Render(SpriteBatch spriteBatch)
     {
         PlayerView localPlayer = Globals.Game.xLocalPlayer;

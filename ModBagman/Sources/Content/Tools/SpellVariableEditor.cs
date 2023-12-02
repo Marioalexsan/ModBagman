@@ -3,6 +3,9 @@ using static SoG.SpellVariable;
 
 namespace ModBagman;
 
+/// <summary>
+/// Utility for editing spell variables and restoring their values.
+/// </summary>
 public class SpellVariableEditor
 {
     private static FieldInfo _denfVariablesField = AccessTools.Field(typeof(SpellVariable), "denfVariables");
@@ -10,7 +13,12 @@ public class SpellVariableEditor
 
     private readonly Dictionary<Handle, float> _previousValues = new();
 
-    public void EditValue(Handle handle, float value)
+    /// <summary>
+    /// Sets the value of a spell variable.
+    /// </summary>
+    /// <param name="handle"></param>
+    /// <param name="value"></param>
+    public void SetValue(Handle handle, float value)
     {
         if (!_previousValues.ContainsKey(handle))
         {
@@ -22,7 +30,7 @@ public class SpellVariableEditor
 
     public void EditValueBy(Handle handle, float change)
     {
-        EditValue(handle, Get(handle) + change);
+        SetValue(handle, Get(handle) + change);
     }
 
     public void RestoreValues()

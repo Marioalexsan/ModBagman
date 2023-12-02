@@ -1,21 +1,6 @@
 ﻿namespace ModBagman;
 
 /// <summary>
-/// Defines all of the available equipment types.
-/// </summary>
-public enum EquipmentType
-{
-    None = -1,
-    Weapon = ItemCodex.ItemCategories.Weapon,
-    Shield = ItemCodex.ItemCategories.Shield,
-    Armor = ItemCodex.ItemCategories.Armor,
-    Hat = ItemCodex.ItemCategories.Hat,
-    Accessory = ItemCodex.ItemCategories.Accessory,
-    Shoes = ItemCodex.ItemCategories.Shoes,
-    Facegear = ItemCodex.ItemCategories.Facegear
-}
-
-/// <summary>
 /// Defines the directions used by the game.
 /// </summary>
 public static class Directions
@@ -31,8 +16,14 @@ public static class Directions
 /// </summary>
 public static class DamageTypes
 {
-    // Shield related
+    /// <summary>
+    /// Damage blocked by shield.
+    /// </summary>
     public const byte Type1_ShieldDamage = 1;
+
+    /// <summary>
+    /// 
+    /// </summary>
     public const byte Type2_ShieldDamage_PerfectGuard = 2;
     public const byte Type101_BreakShield = 101;
 
