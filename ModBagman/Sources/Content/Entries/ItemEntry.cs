@@ -272,7 +272,7 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
     public int this[Stat stat]
     {
         get => stats.TryGetValue(stat, out int value) ? value : 0;
-        set => stats[Stat.HP] = value;
+        set => stats[stat] = value;
     }
 
     /// <summary>
@@ -419,9 +419,12 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
             vanillaEquip.xItemDescription = vanillaItem;
         }
 
-        vanillaItem.sNameLibraryHandle = $"Item_{(int)GameID}_Name";
-        vanillaItem.sDescriptionLibraryHandle = $"Item_{(int)GameID}_Description";
-        vanillaItem.sCategory = "";
+        if (!IsVanilla)
+        {
+            vanillaItem.sNameLibraryHandle = $"Item_{(int)GameID}_Name";
+            vanillaItem.sDescriptionLibraryHandle = $"Item_{(int)GameID}_Description";
+            vanillaItem.sCategory = "";
+        }
 
         EquipmentType typeToUse = Enum.IsDefined(typeof(EquipmentType), EquipType) ? EquipType : EquipmentType.None;
 
@@ -511,8 +514,21 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
             }
         }
 
-        Globals.Game.EXT_AddMiscText("Items", vanillaItem.sNameLibraryHandle, vanillaItem.sFullName);
-        Globals.Game.EXT_AddMiscText("Items", vanillaItem.sDescriptionLibraryHandle, vanillaItem.sDescription);
+        var name = 
+            Globals.Game.EXT_GetMiscText("Items", vanillaItem.sNameLibraryHandle) 
+            ?? Globals.Game.EXT_AddMiscText("Items", vanillaItem.sNameLibraryHandle, vanillaItem.sFullName);
+        var desc = 
+            Globals.Game.EXT_GetMiscText("Items", vanillaItem.sDescriptionLibraryHandle) 
+            ?? Globals.Game.EXT_AddMiscText("Items", vanillaItem.sDescriptionLibraryHandle, vanillaItem.sDescription);
+
+        name.sUnparsedBaseLine = name.sUnparsedFullLine = vanillaItem.sFullName;
+        desc.sUnparsedBaseLine = desc.sUnparsedFullLine = vanillaItem.sDescription;
+
+        if (GameID == ItemCodex.ItemTypes.Apple)
+        {
+            Console.WriteLine(vanillaItem.sNameLibraryHandle);
+            Console.WriteLine(vanillaItem.sDescriptionLibraryHandle);
+        }
 
         // Textures are loaded on demand
     }

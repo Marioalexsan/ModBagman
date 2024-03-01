@@ -70,12 +70,6 @@ internal static class Program
             return;
         }
 
-        if (options.GenerateTypeScriptDefinitons)
-        {
-            GenerateTypeScriptDefinitions();
-            return;
-        }
-
         try
         {
             CheckFirstTimeBoot();
@@ -213,13 +207,6 @@ internal static class Program
             if (__state.Elapsed > TimeSpan.FromSeconds(0.25))
                 Logger.LogWarning($"Patch is taking a long time! ({__state.Elapsed.TotalSeconds:F2}s) ({original.Name})");
         }
-    }
-
-    private static void GenerateTypeScriptDefinitions()
-    {
-        const string fileName = "modbagman.d.ts";
-        File.WriteAllBytes(fileName, Resources.Resources.TSDefinitionFiles);
-        Console.WriteLine($"Generated typings in {fileName}.");
     }
 
     private static CLIOptions ParseArguments(string[] args)

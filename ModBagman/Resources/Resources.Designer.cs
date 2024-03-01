@@ -99,15 +99,5 @@ namespace ModBagman.Resources {
                 return ((byte[])(obj));
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] TSDefinitionFiles {
-            get {
-                object obj = ResourceManager.GetObject("TSDefinitionFiles", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

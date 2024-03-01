@@ -8,43 +8,49 @@ namespace ModBagman;
 /// </summary>
 public static class PatchUtils
 {
-    private static readonly Dictionary<StackBehaviour, int> s_stackDeltas;
-
-    static PatchUtils()
+    /// <summary>
+    /// Returns the effect of the stack behaviour on the stack.
+    /// </summary>
+    /// <param name="behaviour">StackBehaviour to analyze.</param>
+    /// <returns>
+    /// Stack size change for this behaviour. 
+    /// Positive numbers mean this behaviour adds this many values to the stack, 
+    /// negative means removal of this many values from the stack.
+    /// </returns>
+    /// <exception cref="ArgumentException">The given StackBehaviour vaue is not part of the enum.</exception>
+    public static int GetStackEffect(StackBehaviour behaviour) => behaviour switch
     {
-        s_stackDeltas = new Dictionary<StackBehaviour, int>()
-        {
-            { StackBehaviour.Pop0, 0 },
-            { StackBehaviour.Pop1, -1 },
-            { StackBehaviour.Pop1_pop1, -2 },
-            { StackBehaviour.Popi, -1 },
-            { StackBehaviour.Popi_pop1, -2 },
-            { StackBehaviour.Popi_popi, -2 },
-            { StackBehaviour.Popi_popi_popi, -3 },
-            { StackBehaviour.Popi_popi8, -2 },
-            { StackBehaviour.Popi_popr4, -2 },
-            { StackBehaviour.Popi_popr8, -2 },
-            { StackBehaviour.Popref, -1 },
-            { StackBehaviour.Popref_pop1, -2 },
-            { StackBehaviour.Popref_popi, -2 },
-            { StackBehaviour.Popref_popi_pop1, -3 },
-            { StackBehaviour.Popref_popi_popi, -3 },
-            { StackBehaviour.Popref_popi_popi8, -3 },
-            { StackBehaviour.Popref_popi_popr4, -3 },
-            { StackBehaviour.Popref_popi_popr8, -3 },
-            { StackBehaviour.Popref_popi_popref, -3 },
-            { StackBehaviour.Push0, 0 },
-            { StackBehaviour.Push1, 1 },
-            { StackBehaviour.Push1_push1, 2 },
-            { StackBehaviour.Pushi, 1 },
-            { StackBehaviour.Pushi8, 1 },
-            { StackBehaviour.Pushr4, 1 },
-            { StackBehaviour.Pushr8, 1 },
-            { StackBehaviour.Pushref, 1 },
-            { StackBehaviour.Varpop, -1 },
-            { StackBehaviour.Varpush, 1 }
-        };
-    }
+        StackBehaviour.Pop0 => 0,
+        StackBehaviour.Pop1 => -1,
+        StackBehaviour.Pop1_pop1 => -2,
+        StackBehaviour.Popi => -1,
+        StackBehaviour.Popi_pop1 => -2,
+        StackBehaviour.Popi_popi => -2,
+        StackBehaviour.Popi_popi_popi => -3,
+        StackBehaviour.Popi_popi8 => -2,
+        StackBehaviour.Popi_popr4 => -2,
+        StackBehaviour.Popi_popr8 => -2,
+        StackBehaviour.Popref => -1,
+        StackBehaviour.Popref_pop1 => -2,
+        StackBehaviour.Popref_popi => -2,
+        StackBehaviour.Popref_popi_pop1 => -3,
+        StackBehaviour.Popref_popi_popi => -3,
+        StackBehaviour.Popref_popi_popi8 => -3,
+        StackBehaviour.Popref_popi_popr4 => -3,
+        StackBehaviour.Popref_popi_popr8 => -3,
+        StackBehaviour.Popref_popi_popref => -3,
+        StackBehaviour.Push0 => 0,
+        StackBehaviour.Push1 => 1,
+        StackBehaviour.Push1_push1 => 2,
+        StackBehaviour.Pushi => 1,
+        StackBehaviour.Pushi8 => 1,
+        StackBehaviour.Pushr4 => 1,
+        StackBehaviour.Pushr8 => 1,
+        StackBehaviour.Pushref => 1,
+        StackBehaviour.Varpop => -1,
+        StackBehaviour.Varpush => 1,
+        _ => throw new ArgumentException("The given StackBehaviour is not a valid value.")
+    };
 
     public static List<CodeInstruction> InsertAfterMethod(this List<CodeInstruction> code, MethodInfo target, List<CodeInstruction> insertedCode, int methodIndex = 0, int startOffset = 0, bool editsReturnValue = false)
     {
@@ -84,8 +90,8 @@ public static class PatchUtils
         while (stackDelta > 0 && firstIndex < code.Count)
         {
             firstIndex += 1;
-            stackDelta += s_stackDeltas[code[firstIndex].opcode.StackBehaviourPush];
-            stackDelta += s_stackDeltas[code[firstIndex].opcode.StackBehaviourPop];
+            stackDelta += GetStackEffect(code[firstIndex].opcode.StackBehaviourPush);
+            stackDelta += GetStackEffect(code[firstIndex].opcode.StackBehaviourPop);
 
             if (stackDelta < 0)
                 throw new InvalidOperationException("Instructions after the method have an invalid state.");
@@ -145,8 +151,8 @@ public static class PatchUtils
         while (stackDelta < 0 && firstIndex > 0)
         {
             firstIndex -= 1;
-            stackDelta += s_stackDeltas[code[firstIndex].opcode.StackBehaviourPush];
-            stackDelta += s_stackDeltas[code[firstIndex].opcode.StackBehaviourPop];
+            stackDelta += GetStackEffect(code[firstIndex].opcode.StackBehaviourPush);
+            stackDelta += GetStackEffect(code[firstIndex].opcode.StackBehaviourPop);
 
             if (stackDelta > 0)
             {
