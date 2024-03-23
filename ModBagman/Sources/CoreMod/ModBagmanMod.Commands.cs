@@ -10,51 +10,106 @@ namespace ModBagman;
 
 internal partial class ModBagmanMod : Mod
 {
-    [ModCommand("Help")]
+    [ModCommand("Clear", Description = "Clears the console.")]
+    private void Clear()
+    {
+        Globals.Console?.ClearMessages();
+    }
+
+    [ModCommand("Help", Description = "Show ModBagman commands.")]
     private void Help(string[] args, int connection)
     {
-        Mod mod = args.Length == 0 ? this : CommandEntry.MatchModByTarget(args[0]);
+        if (args.Length > 1)
+        {
+            CAS.AddChatMessage($"[{Name}] Usage: /{Name}:Help [<mod>[:<command>]].");
+            return;
+        }
+
+        var parts = args.Length == 0 ? Array.Empty<string>() : args[0].Split(new[] { ':' });
+
+        if (parts.Length > 2)
+        {
+            CAS.AddChatMessage($"[{Name}] Usage: /{Name}:Help [<mod>[:<command>]].");
+            return;
+        }
+
+        string modName = parts.Length >= 1 ? parts[0] : null;
+        string command = parts.Length >= 2 ? parts[1] : null;
+
+        Mod mod = modName == null ? this : CommandEntry.MatchModByTarget(modName);
 
         if (mod == null)
         {
-            CAS.AddChatMessage($"[{Name}] Unknown mod '{args[0]}'!");
+            CAS.AddChatMessage($"[{Name}] Unknown mod '{modName}'!");
             return;
         }
 
-        List<string> commandList = mod.GetCommands()?.Commands.Keys.ToList() ?? new List<string>();
-
-        if (commandList.Count == 0)
+        if (command == null)
         {
-            CAS.AddChatMessage($"[{Name}] No commands are defined for this mod!");
-            return;
-        }
+            // Command list
 
-        string target = args.Length == 0 ? "" : $" for {mod.Name}";
+            List<string> commandList = mod.GetCommands()?.Commands.Keys.ToList() ?? new List<string>();
 
-        if (!string.IsNullOrEmpty(mod.GetCommands().Alias))
-            target += $" (alias: {mod.GetCommands().Alias})";
-
-        CAS.AddChatMessage($"[{Name}] Command list{target}:");
-
-        var messages = new List<string>();
-        var concated = "";
-        foreach (var cmd in commandList)
-        {
-            if (concated.Length + cmd.Length > 40)
+            if (commandList.Count == 0)
             {
-                messages.Add(concated);
-                concated = "";
+                CAS.AddChatMessage($"[{Name}] No commands are defined for {Name}!");
+                return;
             }
-            concated += cmd + " ";
-        }
-        if (concated != "")
-            messages.Add(concated);
 
-        foreach (var line in messages)
-            CAS.AddChatMessage(line);
+            string target = mod == this ? "" : $" for {mod.Name}";
+
+            if (!string.IsNullOrEmpty(mod.GetCommands().Alias))
+                target += $" (alias: {mod.GetCommands().Alias})";
+
+            CAS.AddChatMessage($"[{Name}] Command list{target}:");
+
+            var messages = new List<string>();
+            var concated = "";
+            foreach (var cmd in commandList)
+            {
+                if (concated.Length + cmd.Length > 40)
+                {
+                    messages.Add(concated);
+                    concated = "";
+                }
+                concated += cmd + " ";
+            }
+            if (concated != "")
+                messages.Add(concated);
+
+            foreach (var line in messages)
+                CAS.AddChatMessage(line);
+        }
+        else
+        {
+            // Command help text
+
+            string target = mod == this ? "" : $" in {mod.Name}";
+
+            CAS.AddChatMessage($"[{Name}] Command {command}{target}:");
+
+            var entry = Entries.Commands.Get(mod, "");
+
+            if (entry != null && entry.HelpText.TryGetValue(command, out string desc))
+            {
+                if (desc == null)
+                {
+                    CAS.AddChatMessage("<No info provided>");
+                }
+                else
+                {
+                    foreach (var line in desc.Split('\n'))
+                        CAS.AddChatMessage(line);
+                }
+            }
+            else
+            {
+                CAS.AddChatMessage("<No description provided>");
+            }
+        }
     }
 
-    [ModCommand("ModList")]
+    [ModCommand("ModList", Description = "Show list of available mods.")]
     private void ModList(string[] args, int connection)
     {
         CAS.AddChatMessage($"[{Name}] Mod Count: {ModManager.Mods.Count}");
@@ -78,7 +133,7 @@ internal partial class ModBagmanMod : Mod
             CAS.AddChatMessage(line);
     }
 
-    [ModCommand("RenderColliders")]
+    [ModCommand("RenderColliders", Description = "Render level colliders\n-c : Render combat\n-l : Render level \n-m : Render movement")]
     private void RenderColliders(string[] args, int connection)
     {
         if (args.Any(x => !(x == "-c" || x == "-l" || x == "-m")))
@@ -115,7 +170,7 @@ internal partial class ModBagmanMod : Mod
         }
     }
 
-    [ModCommand("Spawn")]
+    [ModCommand("Spawn", Description = "Spawns an entity in the world.\nValid entities: Item, Pin")]
     private void Spawn(string[] args, int connection)
     {
         if (NetUtils.IsClient)

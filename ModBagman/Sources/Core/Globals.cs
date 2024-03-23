@@ -20,6 +20,11 @@ public static class Globals
     /// <summary>
     /// Secrets of Grindea's game instance.
     /// </summary>
+    public static DeveloperConsole Console { get; private set; }
+
+    /// <summary>
+    /// Secrets of Grindea's game instance.
+    /// </summary>
     public static Game1 Game { get; private set; }
 
     public static string AppDataPath => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/ModBagman/";
@@ -46,6 +51,7 @@ public static class Globals
         Game = (Game1)typeof(Game1).Assembly.GetType("SoG.Program").GetField("game").GetValue(null);
         Game.sAppData = AppDataPath;
         Game.xGameSessionData.xRogueLikeSession.bTemporaryHighScoreBlock = true;
+        Console = new();
     }
 
     internal static void UpdateVersionNumber()

@@ -22,7 +22,9 @@ static class _Chat_ParseCommand
             new CodeInstruction(OpCodes.Ldarg_S, 1),
             new CodeInstruction(OpCodes.Ldarg_S, 2),
             new CodeInstruction(OpCodes.Call, implementerCall),
-            new CodeInstruction(OpCodes.Brfalse, afterRet),
+            new CodeInstruction(OpCodes.Stloc_S, 2),
+            new CodeInstruction(OpCodes.Ldloc_S, 2),
+            new CodeInstruction(OpCodes.Brtrue, afterRet),
             new CodeInstruction(OpCodes.Ret),
             new CodeInstruction(OpCodes.Nop).WithLabels(afterRet)
         };
@@ -30,11 +32,17 @@ static class _Chat_ParseCommand
         return codeList.InsertAfterMethod(target, insert);
     }
 
-    static bool ParseModCommands(string command, string message, int connection)
+    internal static string ParseModCommands(string command, string message, long connection)
     {
+        Console.WriteLine($"Calling with {command} {message}");
         string[] words = command.Split(new[] { ':' }, 2);
+
         if (words.Length != 2)
-            return false; // Is probably a vanilla command
+        {
+            CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Command syntax: /<mod>:<command> [args...].");
+            CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Use vanilla commands with /sog:<command> [args...]");
+            return null;
+        }
 
         string target = words[0];
         string trueCommand = words[1];
@@ -45,12 +53,35 @@ static class _Chat_ParseCommand
          * 3. Direct matches by alias
          * 4. Fuzzy matches by alias
          */
-        Mod mod = CommandEntry.MatchModByTarget(target);     
+        Mod mod = CommandEntry.MatchModByTarget(target);
 
         if (mod == null)
         {
             CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Unknown mod '{target}'!");
-            return true;
+            return null;
+        }
+
+        if (mod == ModManager.Vanilla)
+        {
+            // Intercept vanilla calls
+            if (trueCommand.Equals("help", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (message != "")
+                {
+                    ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}", connection);
+                    return null;
+                }
+                else
+                {
+                    ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}:{message}", connection);
+                    return null;
+                }
+            }
+            else
+            {
+                // Return the modified command
+                return trueCommand;
+            }
         }
 
         var entry = Entries.Commands.Get(mod, "");
@@ -65,14 +96,24 @@ static class _Chat_ParseCommand
 
         if (entry == null || parser == null)
         {
+            Console.WriteLine($"entry {entry != null}, parser ${parser != null}");
+
             if (trueCommand.Equals("help", StringComparison.InvariantCultureIgnoreCase))
             {
-                ParseModCommands($"{ModBagmanMod.ModName}:Help", target, connection);
-                return true;
+                if (message != "")
+                {
+                    ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}", connection);
+                    return null;
+                }
+                else
+                {
+                    ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}:{message}", connection);
+                    return null;
+                }
             }
 
             CAS.AddChatMessage($"[{target}] Unknown command!");
-            return true;
+            return null;
         }
 
         string[] args = message.Split(new char[] { ' ' }, options: StringSplitOptions.RemoveEmptyEntries);
@@ -80,6 +121,6 @@ static class _Chat_ParseCommand
         Program.Logger.LogDebug("Parsed command {target} : {trueCommand}, arguments: {args.Length}", target, trueCommand, args.Length);
         parser(args, connection);
 
-        return true;
+        return null;
     }
 }

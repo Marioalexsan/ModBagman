@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommandLine;
+using Microsoft.Extensions.Logging;
+using MonoMod.Utils;
 using System.Reflection;
 
 namespace ModBagman;
@@ -8,7 +10,7 @@ namespace ModBagman;
 /// </summary>
 /// <param name="args"> The argument list. </param>
 /// <param name="connection"> The connection identifier of the player. </param>
-public delegate void CommandParser(string[] args, int connection);
+public delegate void CommandParser(string[] args, long connection);
 
 /// <summary>
 /// Defines custom commands that can be entered from the in-game chat. <para/>
@@ -25,6 +27,8 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
 
     public Dictionary<string, CommandParser> Commands = new();
 
+    public Dictionary<string, string> HelpText = new();
+
     /// <summary>
     /// Name alias to use for this mod.
     /// If set to a value other than null or undefined, the mod commands will 
@@ -33,6 +37,34 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
     /// Ideally, you want this to be a short and easy to use name.
     /// </summary>
     public string Alias { get; set; }
+
+    public void AddCommand(string command, Delegate action, string description = "")
+    {
+        CommandParser parser = null;
+
+        if (typeof(CommandParser).IsAssignableFrom(action.GetType()))
+        {
+            parser = (CommandParser)action;
+        }
+        else if (typeof(Action<string[], int>).IsAssignableFrom(action.GetType()))
+        {
+            var converted = (Action<string[], int>)action;
+            parser = (args, connection) => converted(args, (int)connection);
+        }
+        else if (typeof(Action<string[]>).IsAssignableFrom(action.GetType()))
+        {
+            var converted = (Action<string[]>)action;
+            parser = (args, connection) => converted(args);
+        }
+        else if (typeof(Action).IsAssignableFrom(action.GetType()))
+        {
+            var converted = (Action)action;
+            parser = (args, connection) => converted();
+        }
+
+        Commands[command] = parser ?? throw new ArgumentException("The given action isn't convertible to a command.");
+        HelpText[command] = description;
+    }
 
     public void AutoAddModCommands(string alias = null)
     {
@@ -45,15 +77,48 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
 
         foreach (var (method, attrib) in methods)
         {
+            bool success = false;
+
             try
             {
-                var command = (CommandParser)method.CreateDelegate(typeof(CommandParser), method.IsStatic ? null : Mod);
-
-                Commands[attrib.Command] = command;
+                AddCommand(attrib.Command, method.CreateDelegate(typeof(CommandParser), method.IsStatic ? null : Mod), attrib.Description);
+                success = true;
             }
-            catch (Exception e)
+            catch { }
+
+            if (!success)
             {
-                Program.Logger.LogWarning($"Couldn't add command {attrib.Command}: {e.Message}");
+                try
+                {
+                    AddCommand(attrib.Command, method.CreateDelegate(typeof(Action<string[], int>), method.IsStatic ? null : Mod), attrib.Description);
+                    success = true;
+                }
+                catch { }
+            }
+
+            if (!success)
+            {
+                try
+                {
+                    AddCommand(attrib.Command, method.CreateDelegate(typeof(Action<string[]>), method.IsStatic ? null : Mod), attrib.Description);
+                    success = true;
+                }
+                catch { }
+            }
+
+            if (!success)
+            {
+                try
+                {
+                    AddCommand(attrib.Command, method.CreateDelegate(typeof(Action), method.IsStatic ? null : Mod), attrib.Description);
+                    success = true;
+                }
+                catch { }
+            }
+
+            if (!success)
+            {
+                Program.Logger.LogWarning($"Couldn't add command {attrib.Command}: The given method isn't an acceptable type for a mod command.");
             }
         }
 

@@ -524,12 +524,6 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
         name.sUnparsedBaseLine = name.sUnparsedFullLine = vanillaItem.sFullName;
         desc.sUnparsedBaseLine = desc.sUnparsedFullLine = vanillaItem.sDescription;
 
-        if (GameID == ItemCodex.ItemTypes.Apple)
-        {
-            Console.WriteLine(vanillaItem.sNameLibraryHandle);
-            Console.WriteLine(vanillaItem.sDescriptionLibraryHandle);
-        }
-
         // Textures are loaded on demand
     }
 

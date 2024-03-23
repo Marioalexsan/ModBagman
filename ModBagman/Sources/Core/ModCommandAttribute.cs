@@ -15,5 +15,13 @@ public class ModCommandAttribute : Attribute
         Command = command;
     }
 
+    /// <summary>
+    /// String to use as command.
+    /// </summary>
     public string Command { get; }
+
+    /// <summary>
+    /// A short description of this command. Optional.
+    /// </summary>
+    public string Description { get; set; }
 }
