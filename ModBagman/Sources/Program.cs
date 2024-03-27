@@ -24,8 +24,12 @@ internal static class Program
     private static IConfigurationBuilder _configBuilder;
     private static string GetConfigPath() => Path.Combine(Globals.AppDataPath, "ModBagmanConfig.json");
 
+    private static IConfiguration _configuration = null;
     public static IConfiguration ReadConfig()
     {
+        if (_configuration != null)
+            return _configuration;
+
         if (!File.Exists(GetConfigPath()))
         {
             const string BaseConfig = """
@@ -33,7 +37,8 @@ internal static class Program
                     "IgnoredMods": [
                         
                     ],
-                    "HarmonyDebug": false
+                    "HarmonyDebug": false,
+                    "PrintAutoSplitOffsets": false
                 }
                 """;
 
@@ -43,7 +48,7 @@ internal static class Program
 
         try
         {
-            return _configBuilder.Build();
+            return _configuration = _configBuilder.Build();
         }
         catch
         {

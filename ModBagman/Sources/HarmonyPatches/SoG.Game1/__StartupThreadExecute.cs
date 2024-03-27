@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Quests;
 using System.Text;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Configuration;
 
 namespace ModBagman.HarmonyPatches;
 
@@ -48,7 +49,8 @@ static class __StartupThreadExecute
         MainMenuWorker.UpdateStorySaveCompatibility();
         MainMenuWorker.UpdateArcadeSaveCompatibility();
 
-        PrintAutoSplitDebugInfo();
+        if (Program.ReadConfig()?.GetValue("HarmonyDebug", false) ?? false)
+            PrintAutoSplitDebugInfo();
     }
 
     /// <summary>

@@ -411,7 +411,7 @@ public class DeveloperConsole : ICanHazInput
         }
     }
 
-    private static readonly char[] Delim = new[] { ' ' }; 
+    private static readonly char[] Delim = new[] { ' ' };
 
     private void ExecuteCommand(string command)
     {
