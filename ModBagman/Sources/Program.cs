@@ -4,6 +4,8 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using CommandLine;
 using CommandLine.Text;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace ModBagman;
 
@@ -15,10 +17,8 @@ internal static class Program
 
     public static ILoggerFactory CreateLogFactory(bool multiLine) => LoggerFactory.Create(config =>
     {
-        config.AddSimpleConsole(consoleConfig =>
-        {
-            consoleConfig.SingleLine = !multiLine;
-        });
+        config.AddFile(Path.Combine(Globals.AppDataPath, "Logs", "EventLog-{Date}.txt"), 
+            outputTemplate: "{Timestamp:o} {RequestId,13} [{Level:u3}] [{SourceContext:1}] {Message} ({EventId:x8}){NewLine}{Exception}");
     });
 
     private static IConfigurationBuilder _configBuilder;
@@ -160,6 +160,7 @@ internal static class Program
 
         Directory.CreateDirectory("Mods");
         Directory.CreateDirectory("ModContent");
+        Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Logs"));
         _configBuilder = new ConfigurationBuilder().AddJsonFile(GetConfigPath());
 
         Logger.LogInformation("Applying Patches...");
