@@ -1,10 +1,12 @@
-﻿extern alias CompilerServices; 
+﻿extern alias CompilerServices;
 using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Quests;
+using System.Text;
+using Microsoft.Extensions.Primitives;
 
 namespace ModBagman.HarmonyPatches;
 
@@ -55,39 +57,121 @@ static class __StartupThreadExecute
     static void PrintAutoSplitDebugInfo()
     {
         static int GetFieldOffset(FieldInfo fi) =>
-                            Marshal.ReadInt32(fi.FieldHandle.Value + (4 + IntPtr.Size)) & 0xFFFFFF;
+                            (Marshal.ReadInt32(fi.FieldHandle.Value + (4 + IntPtr.Size)) & 0xFFFFFF) + IntPtr.Size;
 
-        var fields = new[]
+        Dictionary<string, FieldInfo[]> paths = new()
         {
-            // Things we go through
-            AccessTools.Field(typeof(Game1), nameof(Game1.xGameSessionData)),
-            AccessTools.Field(typeof(Game1), nameof(Game1.xStateMaster)),
-            AccessTools.Field(typeof(Game1), nameof(Game1.xCutsceneMaster)),
-            AccessTools.Field(typeof(Game1), nameof(Game1.xLocalPlayer)),
-            AccessTools.Field(typeof(Game1), nameof(Game1.xLevelMaster)),
-            AccessTools.Field(typeof(GameSessionData), nameof(GameSessionData.xRogueLikeSession)),
-            AccessTools.Field(typeof(LevelMaster), nameof(LevelMaster.xZoningHelper)),
-            AccessTools.Field(typeof(PlayerView), nameof(PlayerView.xJournalInfo)),
-            AccessTools.Field(typeof(Journal), nameof(Journal.xQuestLog)),
-            AccessTools.Field(typeof(CutsceneControl), nameof(CutsceneControl.xActiveCutscene)),
-
-            // The actual relevant stuff as seen in the ASL script
-            AccessTools.Field(typeof(GameSessionData.RogueLikeSession), nameof(GameSessionData.RogueLikeSession.bInRun)),
-            AccessTools.Field(typeof(GameSessionData.RogueLikeSession), nameof(GameSessionData.RogueLikeSession.iCurrentFloor)),
-            AccessTools.Field(typeof(StateMaster), nameof(StateMaster.enGameMode)),
-            AccessTools.Field(typeof(StateMaster), nameof(StateMaster.enGameState)),
-            AccessTools.Field(typeof(LevelMaster.ZoningHelper), nameof(LevelMaster.ZoningHelper.iZoningStateProgress)),
-            AccessTools.Field(typeof(CutsceneControl), nameof(CutsceneControl.bInCutscene)),
-            AccessTools.Field(typeof(Cutscene), nameof(Cutscene.enID)),
-            AccessTools.Field(typeof(QuestLog), nameof(QuestLog.lxActiveQuests)),
-            AccessTools.Field(typeof(QuestLog), nameof(QuestLog.lxCompletedQuests)),
-            AccessTools.Field(typeof(Game1), nameof(Game1.xGameSessionData)),
+            ["inArcadeRun"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xGameSessionData)),
+                AccessTools.Field(typeof(GameSessionData), nameof(GameSessionData.xRogueLikeSession)),
+                AccessTools.Field(typeof(GameSessionData.RogueLikeSession), nameof(GameSessionData.RogueLikeSession.bInRun)),
+            },
+            ["arcadeFloor"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xGameSessionData)),
+                AccessTools.Field(typeof(GameSessionData), nameof(GameSessionData.xRogueLikeSession)),
+                AccessTools.Field(typeof(GameSessionData.RogueLikeSession), nameof(GameSessionData.RogueLikeSession.iCurrentFloor)),
+            },
+            ["gameMode"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xStateMaster)),
+                AccessTools.Field(typeof(StateMaster), nameof(StateMaster.enGameMode)),
+            },
+            ["gameState"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xStateMaster)),
+                AccessTools.Field(typeof(StateMaster), nameof(StateMaster.enGameState)),
+            },
+            ["zoningState"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xLevelMaster)),
+                AccessTools.Field(typeof(LevelMaster), nameof(LevelMaster.xZoningHelper)),
+                AccessTools.Field(typeof(LevelMaster.ZoningHelper), nameof(LevelMaster.ZoningHelper.iZoningStateProgress)),
+            },
+            ["inCutscene"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xCutsceneMaster)),
+                AccessTools.Field(typeof(CutsceneControl), nameof(CutsceneControl.bInCutscene)),
+            },
+            ["currentCutscene"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xCutsceneMaster)),
+                AccessTools.Field(typeof(CutsceneControl), nameof(CutsceneControl.xActiveCutscene)),
+                AccessTools.Field(typeof(Cutscene), nameof(Cutscene.enID)),
+            },
+            ["flagCount"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xGameSessionData)),
+                AccessTools.Field(typeof(GameSessionData), nameof(GameSessionData.henActiveFlags)),
+                AccessTools.Field(typeof(HashSet<FlagCodex.FlagID>), "m_count"),
+            },
+            ["questList"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xLocalPlayer)),
+                AccessTools.Field(typeof(PlayerView), nameof(PlayerView.xJournalInfo)),
+                AccessTools.Field(typeof(Journal), nameof(Journal.xQuestLog)),
+                AccessTools.Field(typeof(QuestLog), nameof(QuestLog.lxActiveQuests)),
+            },
+            ["questDoneList"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xLocalPlayer)),
+                AccessTools.Field(typeof(PlayerView), nameof(PlayerView.xJournalInfo)),
+                AccessTools.Field(typeof(Journal), nameof(Journal.xQuestLog)),
+                AccessTools.Field(typeof(QuestLog), nameof(QuestLog.lxCompletedQuests)),
+            },
+            ["gameSession"] = new[]
+            {
+                AccessTools.Field(typeof(Game1), nameof(Game1.xGameSessionData)),
+            },
+            ["HashSet<FlagCodex.FlagID>.m_count"] = new[]
+            {
+                AccessTools.Field(typeof(HashSet<FlagCodex.FlagID>), "m_count"),
+            },
+            ["HashSet<FlagCodex.FlagID>.m_slots"] = new[]
+            {
+                AccessTools.Field(typeof(HashSet<FlagCodex.FlagID>), "m_slots"),
+            },
+            ["List<Quest>._size"] = new[]
+            {
+                AccessTools.Field(typeof(List<Quest>), "_size"),
+            },
+            ["List<Quest>._items"] = new[]
+            {
+                AccessTools.Field(typeof(List<Quest>), "_items"),
+            },
+            ["Quest.enQuestID"] = new[]
+            {
+                AccessTools.Field(typeof(Quest), nameof(Quest.enQuestID)),
+            },
+            ["Quest.lxObjectives"] = new[]
+            {
+                AccessTools.Field(typeof(Quest), nameof(Quest.lxObjectives)),
+            },
+            ["QuestObjective.bFinished"] = new[]
+            {
+                AccessTools.Field(typeof(QuestObjective), nameof(QuestObjective.bFinished)),
+            }
         };
 
         Program.Logger.LogInformation("Logging offsets...");
-        foreach (var field in fields)
+        foreach (var path in paths)
         {
-            Program.Logger.LogInformation("{} -> {} = {}", field.DeclaringType.FullName, field.Name, (GetFieldOffset(field) + IntPtr.Size).ToString("X"));
+            StringBuilder builder = new();
+
+            builder.Append(path.Key).Append(": ");
+
+            foreach (var field in path.Value)
+            {
+                builder.Append("0x");
+                builder.Append(GetFieldOffset(field).ToString("X"));
+                builder.Append(" => ");
+            }
+
+            if (path.Value.Length > 0)
+                builder.Length -= " => ".Length;
+
+            Program.Logger.LogInformation("{}", builder.ToString());
         }
         Program.Logger.LogInformation("Offset logging done.");
     }
