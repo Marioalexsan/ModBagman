@@ -1,5 +1,4 @@
-﻿extern alias CompilerServices;
-using System.Reflection.Emit;
+﻿using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
@@ -173,7 +172,7 @@ static class __StartupThreadExecute
             if (path.Value.Length > 0)
                 builder.Length -= " => ".Length;
 
-            Program.Logger.LogInformation("{}", builder.ToString());
+            Program.Logger.LogInformation($"{builder}");
         }
         Program.Logger.LogInformation("Offset logging done.");
     }

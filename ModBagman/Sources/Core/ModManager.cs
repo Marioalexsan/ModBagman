@@ -127,13 +127,13 @@ internal static class ModManager
     {
         Program.Logger.LogInformation("Patching mods...");
 
-        foreach (var assembly in mods.Where(x => !x.IsBuiltin && x.ScriptEngine == ScriptEngine.CSharp).Select(x => x.GetType().Assembly).Distinct())
+        foreach (var assembly in mods.Where(x => !x.IsBuiltin && x.ScriptEngine == ScriptEngine.CSharp || x.ScriptEngine == ScriptEngine.CSharpScript).Select(x => x.GetType().Assembly).Distinct())
         {
-            Program.Logger.LogInformation("Patching assembly {}...", assembly.GetName());
+            Program.Logger.LogInformation($"Patching assembly {assembly.GetName()}...");
 
             _modPatcher.PatchAll(assembly);
 
-            Program.Logger.LogInformation("Patched {} methods in total!", _modPatcher.GetPatchedMethods().Count());
+            Program.Logger.LogInformation($"Patched {_modPatcher.GetPatchedMethods().Count()} methods in total!");
         }
 
         Program.Logger.LogInformation("Loading mods...");
@@ -150,7 +150,7 @@ internal static class ModManager
             }
             catch (Exception e)
             {
-                Program.Logger.LogInformation("{mod} threw an error during loading! {}", mod.Name, e.ToString());
+                Program.Logger.LogInformation($"{mod} threw an error during loading! {e}");
             }
 
             CurrentlyLoadingMod = null;

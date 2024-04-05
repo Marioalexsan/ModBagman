@@ -270,7 +270,13 @@ internal static class MainMenuWorker
 
         foreach (Mod mod in ModManager.Mods.Where(x => x.Name != VanillaMod.ModName))
         {
-            string modType = mod is JavaScriptMod ? "JS" : "C#";
+            string modType = mod.ScriptEngine switch
+            {
+                ScriptEngine.CSharp => "C#",
+                ScriptEngine.CSharpScript => "CSX",
+                ScriptEngine.JavaScript => "JS",
+                _ => "???"
+            };
 
             message += mod.Name + " v." + (mod.Version?.ToString() ?? "Unknown") + $" ({modType})" + "\n";
         }

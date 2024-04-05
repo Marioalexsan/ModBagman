@@ -18,7 +18,6 @@ public class DeveloperConsole : ICanHazInput
     private readonly Texture2D _pixel;
 
     private readonly List<string> _messageHistory = new();
-    private readonly List<string> _logHistory = new();
     private readonly List<string> _commandHistory = new();
     private string _latestCommand = "";
 
@@ -27,8 +26,6 @@ public class DeveloperConsole : ICanHazInput
     private const int Spacing = 2;
     private const int Border = 2;
     private const int CommandLineTickerCycle = 60;
-    private const int TimeUntilKeyRepeat = 60;
-    private const int KeyRepeatCycle = 30;
 
     private Color BorderColor = Color.White * 0.75f;
     private Color TextColor = Color.White;
@@ -239,18 +236,15 @@ public class DeveloperConsole : ICanHazInput
             {
                 _triggered = true;
 
-                Console.WriteLine("Input");
                 if (!Active && Globals.Game.xStolenInput == null)
                 {
                     Globals.Game.xStolenInput = this;
                     Active = true;
-                    Console.WriteLine("Active");
                 }
                 else if (Active && Globals.Game.xStolenInput == this)
                 {
                     Globals.Game.xStolenInput = null;
                     Active = false;
-                    Console.WriteLine("Inactive");
                 }
             }
             return;

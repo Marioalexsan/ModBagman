@@ -5,10 +5,25 @@ using System.Text.RegularExpressions;
 
 namespace ModBagman;
 
+/// <summary>
+/// A list of supported implementations for mods.
+/// </summary>
 public enum ScriptEngine
 {
+    /// <summary>
+    /// Uses native C# assemblies for mod code.
+    /// </summary>
     CSharp,
-    JavaScript
+
+    /// <summary>
+    /// Scripting is done via JavaScript.
+    /// </summary>
+    JavaScript,
+
+    /// <summary>
+    /// Scripting is done via C# script files (.csx)
+    /// </summary>
+    CSharpScript
 }
 
 /// <summary>
@@ -29,15 +44,20 @@ public abstract partial class Mod
     /// </summary>
     internal virtual bool IsBuiltin => false;
 
+    internal bool CompiledFromCSharp { get; set; } = false;
+
     /// <summary>
     /// Gets the script engine used for this mod.
     /// </summary>
-    internal ScriptEngine ScriptEngine
+    public ScriptEngine ScriptEngine
     {
         get
         {
             if (this is JavaScriptMod)
                 return ScriptEngine.JavaScript;
+
+            if (CompiledFromCSharp)
+                return ScriptEngine.CSharpScript;
 
             return ScriptEngine.CSharp;
         }
@@ -73,6 +93,12 @@ public abstract partial class Mod
     /// The default value is "ModContent/{NameID}".
     /// </summary>
     public string AssetPath => Path.Combine(Globals.ModContentPath, Name) + "/";
+
+    /// <summary>
+    /// Gets the path from which the mod was loaded.
+    /// This can be the path to an assembly, a zip file, or a development mode script folder.
+    /// </summary>
+    public string LoadedFrom { get; internal set; }
 
     /// <summary>
     /// Gets whenever the mod is currently being loaded.

@@ -1,10 +1,12 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using System.Configuration.Assemblies;
 using System.IO.Compression;
-using static SoG.HitEffectMap;
-using SoG;
+using Microsoft.CodeAnalysis.CSharp;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace ModBagman;
 
@@ -51,6 +53,8 @@ internal static class ModLoader
                 ? jsMod.ListedDependencies.Select(x => new ModDependencyAttribute(x.Key, x.Value)).ToList()
                 : mod.GetType().GetCustomAttributes<ModDependencyAttribute>().ToList();
             dependencyGraph[mod] = new List<Mod>();
+
+            Program.Logger.LogInformation($"{dependencies.Count} {dependencyGraph.Count} {mod.Name}");
         }
 
         List<Mod> loadOrder = new();
@@ -58,6 +62,7 @@ internal static class ModLoader
 
         while ((readyMods = dependencies.Where(x => x.Value.Count == 0).Select(x => x.Key).ToList()).Count() > 0)
         {
+            Program.Logger.LogInformation($"Readymods {readyMods.Count}");
             // Sort nodes that can't be "compared" in the graph.
             // This, along with the dependency sort, ensures a deterministic order
 
@@ -65,6 +70,7 @@ internal static class ModLoader
 
             foreach (var mod in readyMods)
             {
+                Program.Logger.LogInformation($"Load {mod}");
                 dependencies.Remove(mod);
                 loadOrder.Add(mod);
 
@@ -114,7 +120,8 @@ internal static class ModLoader
 
         var candidates = Directory.GetFiles(modFolder)
             .Where(x => x.EndsWith(".dll") || x.EndsWith(".zip"))
-            .Concat(Directory.GetDirectories(modFolder).Where(x => x.EndsWith("_dev")))
+            .Concat(Directory.GetDirectories(modFolder).Where(x => x.EndsWith("_jsdev")))
+            .Concat(Directory.GetDirectories(modFolder).Where(x => x.EndsWith("_csxdev")))
             .ToList();
 
         var selected = candidates
@@ -131,6 +138,29 @@ internal static class ModLoader
         return selected;
     }
 
+    private static Mod LoadMod(string path)
+    {
+        if (path.EndsWith(".dll"))
+            return LoadCSharpMod(path);
+
+        if (path.EndsWith(".js.zip"))
+            return LoadJavaScriptArchive(path);
+
+        if (path.EndsWith(".csx.zip"))
+            return LoadCSharpScriptArchive(path);
+
+        if (Directory.Exists(path))
+        {
+            if (path.EndsWith("_jsdev"))
+                return LoadJavaScriptFolder(path);
+
+            if (path.EndsWith("_csxdev"))
+                return LoadCSharpScriptFolder(path);
+        }
+
+        return null;
+    }
+
     private static List<Mod> LoadModsFromAssemblies(IEnumerable<string> paths)
     {
         var mods = new List<Mod>()
@@ -139,18 +169,29 @@ internal static class ModLoader
             new ModBagmanMod()
         };
 
+        var usedNames = new List<string>();
+
         mods.AddRange(paths.Select(path =>
         {
-            if (path.EndsWith(".dll"))
-                return LoadCSharpMod(path);
+            Mod mod = LoadMod(path);
 
-            if (path.EndsWith(".zip"))
-                return LoadJavaScriptArchive(path);
+            if (mod == null)
+                return null;
 
-            if (Directory.Exists(path))
-                return LoadJavaScriptFolder(path);
+            bool conflictingID = usedNames.Any(x => x == mod.Name);
 
-            return null;
+            if (conflictingID)
+            {
+                string shortPath = ShortenModPaths(path);
+
+                Program.Logger.LogError("Mod {shortPath} with NameID {mod.NameID} conflicts with a previously loaded mod.", shortPath, mod.Name);
+                return null;
+            }
+
+            mod.LoadedFrom = path;
+            usedNames.Add(mod.Name);
+            Program.Logger.LogInformation($"Candidate mod for loading: {mod.Name}");
+            return mod;
         }).Where(mod => mod != null));
 
         return mods;
@@ -177,9 +218,9 @@ internal static class ModLoader
 
         try
         {
-            Queue<(string, string)> paths = new();
+            Queue<string> paths = new();
 
-            paths.Enqueue((folderPath, ""));
+            paths.Enqueue(folderPath);
 
             Dictionary<string, string> sources = new();
 
@@ -190,15 +231,17 @@ internal static class ModLoader
 
             while (paths.Count > 0)
             {
-                var (subFolderPath, root) = paths.Dequeue();
+                var folder = paths.Dequeue();
+                Program.Logger.LogInformation($"Folder {folder}");
 
-                foreach (var path in Directory.GetDirectories(subFolderPath))
-                    paths.Enqueue((Path.Combine(subFolderPath, Path.GetDirectoryName(path)), root == "" ? Path.GetDirectoryName(path) : Path.Combine(root, Path.GetDirectoryName(path))));
+                foreach (var path in Directory.GetDirectories(folder))
+                    paths.Enqueue(path);
 
-                foreach (var file in Directory.GetFiles(subFolderPath))
+                foreach (var file in Directory.GetFiles(folder).Where(x => x.EndsWith(".js")))
                 {
                     using StreamReader reader = new StreamReader(File.OpenRead(file));
-                    sources[Path.Combine(root, Path.GetFileName(file))] = reader.ReadToEnd();
+                    sources[file] = reader.ReadToEnd();
+                    Program.Logger.LogInformation($"Script .js {file}");
                 }
             }
 
@@ -275,6 +318,102 @@ internal static class ModLoader
         return null;
     }
 
+    private static Mod LoadCSharpScriptFolder(string folderPath)
+    {
+        string shortPath = ShortenModPaths(folderPath);
+
+        Program.Logger.LogInformation("Loading CSX mod from {path}.", shortPath);
+
+        try
+        {
+            Queue<string> paths = new();
+
+            paths.Enqueue(folderPath);
+
+            Dictionary<string, string> sources = new();
+
+            var split = new[]
+            {
+                '/'
+            };
+
+            while (paths.Count > 0)
+            {
+                var folder = paths.Dequeue();
+                Program.Logger.LogInformation($"Folder {folder}");
+
+                foreach (var path in Directory.GetDirectories(folder))
+                    paths.Enqueue(path);
+
+                foreach (var file in Directory.GetFiles(folder).Where(x => x.EndsWith(".csx") || x.EndsWith(".cs")))
+                {
+                    using StreamReader reader = new StreamReader(File.OpenRead(file));
+                    sources[file] = reader.ReadToEnd();
+                    Program.Logger.LogInformation($"Script .csx {file}");
+                }
+            }
+
+            Program.Logger.LogInformation("Loaded modules: ");
+
+            foreach (var item in sources)
+            {
+                Program.Logger.LogInformation(item.Key);
+            }
+
+            var mod = CompileCSharpScriptAssembly(sources);
+
+            mod.ValidateAndSetup();
+
+            return mod;
+        }
+        catch (Exception e)
+        {
+            Program.Logger.LogError("Failed to load mod {modPath}. An unknown exception occurred: {e}", shortPath, ShortenModPaths(e.ToString()));
+        }
+
+        return null;
+    }
+
+    private static Mod LoadCSharpScriptArchive(string zipPath)
+    {
+        string shortPath = ShortenModPaths(zipPath);
+
+        Program.Logger.LogInformation("Loading CSX mod from {path}.", shortPath);
+
+        try
+        {
+            using ZipArchive archive = ZipFile.OpenRead(zipPath);
+
+            var split = new[]
+            {
+                '/'
+            };
+
+            var pathParts = archive.Entries.First().FullName.Split(split, 2);
+            var isStacked = pathParts.Length == 2 && pathParts[0] == Path.GetFileNameWithoutExtension(zipPath);
+
+            Dictionary<string, string> sources = new();
+
+            foreach (var entry in archive.Entries.Where(x => x.Name.EndsWith(".csx") || x.Name.EndsWith(".cs")))
+            {
+                using StreamReader reader = new StreamReader(entry.Open());
+                sources[isStacked ? entry.FullName.Split(split, 2)[1] : entry.FullName] = reader.ReadToEnd();
+            }
+
+            var mod = CompileCSharpScriptAssembly(sources);
+
+            mod.ValidateAndSetup();
+
+            return mod;
+        }
+        catch (Exception e)
+        {
+            Program.Logger.LogError("Failed to load mod {modPath}. An unknown exception occurred: {e}", shortPath, ShortenModPaths(e.ToString()));
+        }
+
+        return null;
+    }
+
     private static Mod LoadCSharpMod(string assemblyPath)
     {
         string shortPath = ShortenModPaths(assemblyPath);
@@ -288,15 +427,6 @@ internal static class ModLoader
             Mod mod = Activator.CreateInstance(type, true) as Mod;
 
             mod.ValidateAndSetup();
-
-            bool conflictingID = ModManager.Mods.Any(x => x.Name == mod.Name);
-
-            if (conflictingID)
-            {
-                Program.Logger.LogError("Mod {shortPath} with NameID {mod.NameID} conflicts with a previously loaded mod.", shortPath, mod.Name);
-                return null;
-            }
-
 
             return mod;
         }
@@ -312,5 +442,95 @@ internal static class ModLoader
         }
 
         return null;
+    }
+
+    private static readonly Dictionary<string, MetadataReference> References;
+
+    private static void AddAssembly(string assemblyDll)
+    {
+        var file = Path.GetFullPath(assemblyDll);
+
+        if (!File.Exists(file))
+        {
+            file = Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location), assemblyDll);
+
+            if (!File.Exists(file))
+            {
+                Program.Logger.LogWarning($"Couldn't find assembly {assemblyDll}: {file}");
+                return;
+            }
+        }
+
+        if (References.Any(x => x.Key == file))
+            return;
+
+        Program.Logger.LogInformation($"Loading assembly {assemblyDll}: {file}");
+        var reference = MetadataReference.CreateFromFile(file);
+
+        References[file] = reference;
+    }
+
+    private static void AddAssembly(Type type)
+    {
+        AddAssembly(type.Assembly.Location);
+    }
+
+    static ModLoader()
+    {
+        References = new();
+
+        AddAssembly(typeof(Mod));
+        AddAssembly(typeof(Game1));
+        AddAssembly("mscorlib.dll");
+        AddAssembly("System.dll");
+        AddAssembly("System.Core.dll");
+        AddAssembly("Microsoft.CSharp.dll");
+        AddAssembly("System.Net.Http.dll");
+        AddAssembly("System.IO.Compression");
+        AddAssembly("System.IO.Compression.FileSystem.dll");
+        AddAssembly(typeof(Vector2));
+        AddAssembly(typeof(Game));
+        AddAssembly(typeof(SpriteBatch));
+        AddAssembly(typeof(SoundSystem));
+        AddAssembly(typeof(ZipArchive));
+    }
+
+    private static Mod CompileCSharpScriptAssembly(Dictionary<string, string> sources)
+    {
+        var compilationOptions = new CSharpCompilationOptions(
+            Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary,
+            optimizationLevel: Microsoft.CodeAnalysis.OptimizationLevel.Debug
+            );
+
+        var syntaxTrees = sources.Select(x => SyntaxFactory.ParseSyntaxTree(x.Value));
+
+        var compilation = CSharpCompilation.Create($"ModAssembly-{Guid.NewGuid()}")
+            .WithOptions(compilationOptions)
+            .WithReferences(References.Values.ToArray())
+            .AddSyntaxTrees(syntaxTrees);
+
+        using var codeStream = new MemoryStream();
+
+        var compilationResult = compilation.Emit(codeStream);
+
+        if (!compilationResult.Success)
+        {
+            int maxErrors = 10;
+
+            var sb = new StringBuilder();
+            foreach (var diag in compilationResult.Diagnostics.Take(maxErrors))
+            {
+                sb.AppendLine(diag.ToString());
+            }
+
+            throw new InvalidOperationException("CSharp script mod is invalid\n" + sb.ToString());
+        }
+
+        var assembly = Assembly.Load(codeStream.ToArray());
+        Type type = assembly.DefinedTypes.First(t => t.BaseType == typeof(Mod));
+        Mod mod = Activator.CreateInstance(type, true) as Mod;
+        mod.CompiledFromCSharp = true;
+
+        return mod;
     }
 }

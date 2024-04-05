@@ -34,7 +34,7 @@ static class _Chat_ParseCommand
 
     internal static string ParseModCommands(string command, string message, long connection)
     {
-        Console.WriteLine($"Calling with {command} {message}");
+        Program.Logger.LogInformation($"Calling with {command} {message}");
         string[] words = command.Split(new[] { ':' }, 2);
 
         if (words.Length != 2)
@@ -96,7 +96,7 @@ static class _Chat_ParseCommand
 
         if (entry == null || parser == null)
         {
-            Console.WriteLine($"entry {entry != null}, parser ${parser != null}");
+            Program.Logger.LogInformation($"entry {entry != null}, parser ${parser != null}");
 
             if (trueCommand.Equals("help", StringComparison.InvariantCultureIgnoreCase))
             {

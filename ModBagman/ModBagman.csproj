@@ -17,6 +17,7 @@
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <UseWPF>true</UseWPF>
     </PropertyGroup>
     
     <ItemGroup>
@@ -28,6 +29,7 @@
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="Jint" Version="3.0.0-beta-2051" />
         <PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.2" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
@@ -36,9 +38,6 @@
         <PackageReference Include="Semver" Version="3.0.0-beta.1" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.1-dev-00077" />
         <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0">
-            <Aliases>CompilerServices</Aliases>
-        </PackageReference>
         <PackageReference Include="System.Text.Json" Version="7.0.2" />
     </ItemGroup>
     
@@ -73,6 +72,7 @@
     <ItemGroup>
         <Using Include="HarmonyLib" />
         <Using Include="SoG" />
+        <Using Include="System.IO" />
     </ItemGroup>
     
     <ItemGroup>

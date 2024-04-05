@@ -137,8 +137,7 @@ internal static class ErrorHelper
         }
         catch (Exception exc)
         {
-            Console.WriteLine(exc);
-            Console.ReadLine();
+            Program.Logger.LogError(exc.ToString());
         }
         finally
         {

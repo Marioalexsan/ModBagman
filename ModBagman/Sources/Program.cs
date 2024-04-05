@@ -6,6 +6,7 @@ using CommandLine;
 using CommandLine.Text;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using System.Windows;
 
 namespace ModBagman;
 
@@ -18,7 +19,7 @@ internal static class Program
     public static ILoggerFactory CreateLogFactory(bool multiLine) => LoggerFactory.Create(config =>
     {
         config.AddFile(Path.Combine(Globals.AppDataPath, "Logs", "EventLog-{Date}.txt"), 
-            outputTemplate: "{Timestamp:o} {RequestId,13} [{Level:u3}] [{SourceContext:1}] {Message} ({EventId:x8}){NewLine}{Exception}");
+            outputTemplate: "{Timestamp:o} {RequestId,13} [{Level:u3}] [{SourceContext:1}] {Message} {NewLine}{Exception}");
     });
 
     private static IConfigurationBuilder _configBuilder;
@@ -71,7 +72,7 @@ internal static class Program
 
         if (options.Version)
         {
-            Console.WriteLine($"ModBagman version {Globals.ModBagmanVersion}.");
+            Logger.LogInformation($"ModBagman version {Globals.ModBagmanVersion}.");
             return;
         }
 
@@ -89,46 +90,27 @@ internal static class Program
 
         if (HasCrashed)
         {
-            Thread.Sleep(1000);
+            Logger.LogCritical("Exiting game due to crash.");
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.ReadLine();
+            MessageBox.Show("Game crashed due to an exception!\nPlease check the logs in %appdata%/ModBagman/Logs.", "GAME DEADED", MessageBoxButton.OK);
+        }
+        else
+        {
+            Logger.LogInformation("Game closed normally.");
         }
     }
 
     private static void CheckFirstTimeBoot()
     {
-        static void SetColors(ConsoleColor fore, ConsoleColor back)
-        {
-            Console.ForegroundColor = fore;
-            Console.BackgroundColor = back;
-        }
-
         if (!Directory.Exists(Globals.AppDataPath))
         {
-            var lastFore = Console.ForegroundColor;
-            var lastBack = Console.BackgroundColor;
-
-            SetColors(ConsoleColor.Yellow, ConsoleColor.DarkBlue);
-            Console.WriteLine(AsciiArtResources.AlertNotice);
-            Console.WriteLine();
-
-            SetColors(ConsoleColor.Yellow, ConsoleColor.DarkBlue);
-            Console.WriteLine(AsciiArtResources.CopySavesNotice);
-            Console.WriteLine();
-
-            ConsoleKeyInfo c;
-            do
-            {
-                c = Console.ReadKey(true);
-            }
-            while (c.KeyChar != 'Y' && c.KeyChar != 'y' && c.KeyChar != 'N' && c.KeyChar != 'n');
+            var result = MessageBox.Show(AsciiArtResources.CopySavesNotice, "Copy saves?", MessageBoxButton.YesNo);
 
             Directory.CreateDirectory(Globals.AppDataPath);
             Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Characters"));
             Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Worlds"));
 
-            if (c.KeyChar == 'Y' || c.KeyChar == 'y')
+            if (result == MessageBoxResult.Yes)
             {
                 var vanilla = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Secrets of Grindea");
 
@@ -144,12 +126,8 @@ internal static class Program
                 if (File.Exists(Path.Combine(vanilla, "arcademode.sav")))
                     File.Copy(Path.Combine(vanilla, "arcademode.sav"), Path.Combine(Globals.AppDataPath, "arcademode.sav"), true);
 
-                SetColors(ConsoleColor.Yellow, ConsoleColor.DarkBlue);
-                Console.WriteLine(AsciiArtResources.SavesCopiedSuccessfullyNotice);
+                MessageBox.Show(AsciiArtResources.SavesCopiedSuccessfullyNotice, "Saves copied successfully", MessageBoxButton.OK);
             }
-
-            SetColors(lastFore, lastBack);
-            Console.WriteLine();
         }
     }
 
