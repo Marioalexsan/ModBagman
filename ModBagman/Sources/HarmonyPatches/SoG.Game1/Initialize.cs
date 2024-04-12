@@ -5,6 +5,6 @@ static class Initialize
 {
     static void Prefix()
     {
-        Globals.InitializeGlobals();
+        //Globals.InitializeGlobals();
     }
 }
