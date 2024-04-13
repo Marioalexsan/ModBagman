@@ -14,6 +14,41 @@ namespace ModBagman;
 
 internal static class Program
 {
+    private static string GetPatchLoadingText()
+    {
+        var random = new Random();
+
+        string defaultText = "Patching Game...";
+
+        if (random.NextDouble() < 0.8f)
+            return defaultText;
+
+        var easterEggs = new Dictionary<string, int>
+        {
+            ["Propagating Bagmen..."] = 10,
+            ["Operating the Whachamacallit..."] = 5,
+            ["Adding human card..."] = 10,
+            ["Loading TeddyCode(tm)..."] = 5,
+            ["Rigging card drop chances..."] = 5,
+            ["Adding lootboxes..."] = 5,
+            ["Modding the mod so that you can mod while modding..."] = 5
+        };
+
+        var weightRolled = random.Next(easterEggs.Values.Sum());
+        var chosenText = "";
+
+        foreach (var kvp in easterEggs)
+        {
+            chosenText = kvp.Key;
+            weightRolled -= kvp.Value;
+
+            if (weightRolled <= 0)
+                break;
+        }
+
+        return chosenText;
+    }
+
     public static Harmony HarmonyInstance { get; } = new Harmony("ModBagman");
 
     public static DateTime LaunchTime { get; private set; }
@@ -182,9 +217,8 @@ internal static class Program
 
     private static bool GamePatchingStarted = false;
     private static bool GamePatched = false;
-    private static int Counter = 0;
     private static string CurrentMethod = "";
-    private static Stopwatch CurrentPatchingTime = new();
+    private static readonly Stopwatch CurrentPatchingTime = new();
 
     private static void GameUpdateBase(Game __instance, GameTime gameTime)
     {
@@ -217,21 +251,25 @@ internal static class Program
         return false;
     }
 
+    private static readonly string PatchLoadingText = GetPatchLoadingText();
+
     private static bool ModBagmanDrawHook(Game1 __instance, GameTime gameTime)
     {
         if (GamePatched)
             return true;
 
-        Counter = (Counter + 1) % 180;
-
         var font = FontManager.GetFont(FontManager.FontType.Reg7);
 
-        string text = "Patching game...";
-        string status = $"{CurrentMethod} ({CurrentPatchingTime.Elapsed.TotalSeconds:F1}s)";
+        string text = PatchLoadingText;
+        string status = $"{(!string.IsNullOrEmpty(CurrentMethod) ? $"Patching {CurrentMethod}" : "Running Harmony logic")} ({CurrentPatchingTime.Elapsed.TotalSeconds:F1}s)";
+        Texture2D bag = Globals.Game.Content.Load<Texture2D>("GUI/Dialogue/Portraits/Bag/default");
 
         Globals.Game.GraphicsDevice.Clear(Color.Black);
 
         Globals.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, null, null);
+
+        // The one and only Bag
+        Globals.SpriteBatch.Draw(bag, new Vector2(640, bag.Height + 100) / 2, null, Color.White, (float)(gameTime.TotalGameTime.TotalSeconds * Math.PI * 2 / 3), new Vector2(bag.Width / 2, bag.Height * 2 / 3), 1f, SpriteEffects.None, 0f);
 
         // Patching game text
         Globals.SpriteBatch.DrawString(font, text, new Vector2(640, 360) / 2, Color.White, 0f, font.MeasureString(text) / 2, 2f, SpriteEffects.None, 0f);
@@ -293,6 +331,7 @@ internal static class Program
             if (__state.Elapsed > TimeSpan.FromSeconds(0.25))
                 Logger.LogWarning($"Patch is taking a long time! ({__state.Elapsed.TotalSeconds:F2}s) ({original.Name})");
         }
+        CurrentMethod = "";
     }
 
     private static CLIOptions ParseArguments(string[] args)

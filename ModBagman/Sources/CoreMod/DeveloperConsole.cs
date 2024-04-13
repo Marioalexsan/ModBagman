@@ -1,4 +1,5 @@
 ﻿using EventInput;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -411,9 +412,19 @@ public class DeveloperConsole : ICanHazInput
     {
         string[] parts = command.Split(Delim, 2);
 
-        var prev = SoG_CAS.RedirectChatToConsole;
-        SoG_CAS.RedirectChatToConsole = true;
-        _Chat_ParseCommand.ParseModCommands(parts[0], parts.Length > 1 ? parts[1] : "", Globals.Game.xLocalPlayer.iConnectionIdentifier);
-        SoG_CAS.RedirectChatToConsole = prev;
+        var prev = SoG_ChatWindow.RedirectChatToConsole;
+        SoG_ChatWindow.RedirectChatToConsole = true;
+
+        try
+        {
+            _Chat_ParseCommand.ParseModCommands(parts[0], parts.Length > 1 ? parts[1] : "", Globals.Game.xLocalPlayer.iConnectionIdentifier);
+        }
+        catch (Exception e)
+        {
+            Globals.Console.AddMessage($"Exception occurred: {e.Message}");
+            Program.Logger.LogWarning($"Exception: {e}");
+        }
+
+        SoG_ChatWindow.RedirectChatToConsole = prev;
     }
 }

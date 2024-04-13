@@ -7,32 +7,7 @@ namespace ModBagman.HarmonyPatches;
 [HarmonyPatch(typeof(Game1), nameof(Game1._Chat_ParseCommand))]
 static class _Chat_ParseCommand
 {
-    static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code, ILGenerator gen)
-    {
-        var codeList = code.ToList();
-
-        Label afterRet = gen.DefineLabel();
-
-        MethodInfo target = typeof(string).GetMethod(nameof(string.ToLowerInvariant));
-        MethodInfo implementerCall = SymbolExtensions.GetMethodInfo(() => ParseModCommands(default, default, default));
-
-        var insert = new List<CodeInstruction>()
-        {
-            new CodeInstruction(OpCodes.Ldloc_S, 2),
-            new CodeInstruction(OpCodes.Ldarg_S, 1),
-            new CodeInstruction(OpCodes.Ldarg_S, 2),
-            new CodeInstruction(OpCodes.Call, implementerCall),
-            new CodeInstruction(OpCodes.Stloc_S, 2),
-            new CodeInstruction(OpCodes.Ldloc_S, 2),
-            new CodeInstruction(OpCodes.Brtrue, afterRet),
-            new CodeInstruction(OpCodes.Ret),
-            new CodeInstruction(OpCodes.Nop).WithLabels(afterRet)
-        };
-
-        return codeList.InsertAfterMethod(target, insert);
-    }
-
-    internal static string ParseModCommands(string command, string message, long connection)
+    internal static void ParseModCommands(string command, string message, long connection)
     {
         Program.Logger.LogInformation($"Calling with {command} {message}");
         string[] words = command.Split(new[] { ':' }, 2);
@@ -41,7 +16,7 @@ static class _Chat_ParseCommand
         {
             CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Command syntax: /<mod>:<command> [args...].");
             CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Use vanilla commands with /sog:<command> [args...]");
-            return null;
+            return;
         }
 
         string target = words[0];
@@ -58,7 +33,7 @@ static class _Chat_ParseCommand
         if (mod == null)
         {
             CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Unknown mod '{target}'!");
-            return null;
+            return;
         }
 
         if (mod == ModManager.Vanilla)
@@ -68,19 +43,23 @@ static class _Chat_ParseCommand
             {
                 if (message != "")
                 {
+                    Program.Logger.LogInformation($"Parsed help command for {target}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}", connection);
-                    return null;
+                    return;
                 }
                 else
                 {
+                    Program.Logger.LogInformation($"Parsed help command for {target}, arguments: {message}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}:{message}", connection);
-                    return null;
+                    return;
                 }
             }
             else
             {
                 // Return the modified command
-                return trueCommand;
+                Program.Logger.LogInformation($"Running vanilla command {trueCommand}: {message}");
+                Globals.Game._Chat_ParseCommand(trueCommand + " " + message, connection);
+                return;
             }
         }
 
@@ -102,25 +81,25 @@ static class _Chat_ParseCommand
             {
                 if (message != "")
                 {
+                    Program.Logger.LogInformation($"Parsed help command for {target}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}", connection);
-                    return null;
+                    return;
                 }
                 else
                 {
+                    Program.Logger.LogInformation($"Parsed help command for {target}, arguments: {message}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}:{message}", connection);
-                    return null;
+                    return;
                 }
             }
 
             CAS.AddChatMessage($"[{target}] Unknown command!");
-            return null;
+            return;
         }
 
         string[] args = message.Split(new char[] { ' ' }, options: StringSplitOptions.RemoveEmptyEntries);
 
-        Program.Logger.LogDebug("Parsed command {target} : {trueCommand}, arguments: {args.Length}", target, trueCommand, args.Length);
+        Program.Logger.LogInformation("Parsed mod command {target} : {trueCommand}, arguments: {args.Length}", target, trueCommand, args.Length);
         parser(args, connection);
-
-        return null;
     }
 }
