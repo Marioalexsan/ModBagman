@@ -52,7 +52,7 @@ public static class PatchUtils
         _ => throw new ArgumentException("The given StackBehaviour is not a valid value.")
     };
 
-    public static List<CodeInstruction> InsertAfterMethod(this List<CodeInstruction> code, MethodInfo target, List<CodeInstruction> insertedCode, int methodIndex = 0, int startOffset = 0, bool editsReturnValue = false)
+    public static List<CodeInstruction> InsertAfterMethod(this List<CodeInstruction> code, MethodInfo target, List<CodeInstruction> insertedCode, int methodIndex = 0, int startOffset = 0, bool editsReturnValue = false, bool copyExceptionBlocks = true)
     {
         if (methodIndex < 0)
             throw new ArgumentException("methodIndex must not be negative.");
@@ -87,7 +87,7 @@ public static class PatchUtils
 
         // Find method end
 
-        while (stackDelta > 0 && firstIndex < code.Count)
+        while (stackDelta > 0 && firstIndex < code.Count - 1)
         {
             firstIndex += 1;
             stackDelta += GetStackEffect(code[firstIndex].opcode.StackBehaviourPush);
@@ -102,15 +102,19 @@ public static class PatchUtils
 
         // For methods that come right before scopes, shift labels and stuff
 
-        insertedCode[^1].WithLabels(code[firstIndex + 1].labels.ToArray());
+        insertedCode[^1].WithLabels(code[firstIndex + 1].labels.ToArray()).WithBlocks(code[firstIndex + 1].blocks.ToArray());
         code[firstIndex + 1].labels.Clear();
+
+        // Also copy the exception block information associated with the method itself
+        if (copyExceptionBlocks)
+            insertedCode = insertedCode.Select(x => new CodeInstruction(x).WithBlocks(code[index].blocks.ToArray())).ToList();
 
         code.InsertRange(firstIndex + 1, insertedCode);
 
         return code;
     }
 
-    public static List<CodeInstruction> InsertBeforeMethod(this List<CodeInstruction> code, MethodInfo target, List<CodeInstruction> insertedCode, int methodIndex = 0, int startOffset = 0)
+    public static List<CodeInstruction> InsertBeforeMethod(this List<CodeInstruction> code, MethodInfo target, List<CodeInstruction> insertedCode, int methodIndex = 0, int startOffset = 0, bool copyExceptionBlocks = true)
     {
         if (methodIndex < 0)
             throw new ArgumentException("methodIndex must not be negative.");
@@ -166,9 +170,12 @@ public static class PatchUtils
         }
 
         // For methods that come right after scopes, shift labels and stuff
-
         insertedCode[0].WithLabels(code[firstIndex].labels.ToArray());
         code[firstIndex].labels.Clear();
+
+        // Also copy the exception block information associated with the method itself
+        if (copyExceptionBlocks)
+            insertedCode = insertedCode.Select(x => new CodeInstruction(x).WithBlocks(code[index].blocks.ToArray())).ToList();
 
         code.InsertRange(firstIndex, insertedCode);
 

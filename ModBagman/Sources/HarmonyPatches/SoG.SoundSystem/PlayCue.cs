@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Reflection.Emit;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace ModBagman.HarmonyPatches;
 
@@ -14,6 +15,12 @@ static class PlayCue
         yield return AccessTools.Method(typeof(SoundSystem), nameof(SoundSystem.PlayCue), new[] { typeof(string), typeof(TransformComponent) });
         yield return AccessTools.Method(typeof(SoundSystem), nameof(SoundSystem.PlayCue), new[] { typeof(string), typeof(Vector2), typeof(float) });
         yield return AccessTools.Method(typeof(SoundSystem), nameof(SoundSystem.PlayCue), new[] { typeof(string), typeof(IEntity), typeof(bool), typeof(bool) });
+    }
+
+    static void Finalizer(string sCueName, Exception __exception)
+    {
+        if (__exception != null)
+            Program.Logger.LogError($"PlayCue crashed while trying to play {sCueName} : {_Helper.GetEffectName(sCueName)}");
     }
 
     static void Prefix(ref string sCueName)
@@ -60,6 +67,8 @@ static class PlayCue
             new CodeInstruction(OpCodes.Nop).WithLabels(skipVanillaBank)
         };
 
-        return codeList.InsertAroundMethod(target, insertBefore, insertAfter, editsReturnValue: true);
+        return codeList
+            .InsertAroundMethod(target, insertBefore, insertAfter, editsReturnValue: true, methodIndex: 1)
+            .InsertAroundMethod(target, insertBefore, insertAfter, editsReturnValue: true);
     }
 }

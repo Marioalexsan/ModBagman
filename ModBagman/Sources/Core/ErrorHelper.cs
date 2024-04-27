@@ -78,12 +78,19 @@ internal static class ErrorHelper
 
     internal static void LogException(Exception exception)
     {
+        static string ShortenPath(string e)
+        {
+            e = e.Replace("C:\\Dropbox\\Eget jox\\!DugTrio\\Legend Of Grindia\\Legend Of Grindia\\Legend Of Grindia", "(path)");
+            e = e.Replace("F:\\Stable Branch\\Legend Of Grindia\\Legend Of Grindia", "(path)");
+            return e;
+        }
+
         static void PrintStackTrace(StringBuilder msg, Exception exception)
         {
             if (exception.InnerException != null)
                 PrintStackTrace(msg, exception.InnerException);
 
-            msg.AppendLine(exception.ToString());
+            msg.AppendLine(ShortenPath(exception.ToString()));
         }
 
         string e = exception.Message;
@@ -94,8 +101,6 @@ internal static class ErrorHelper
             Globals.Game.xOptions.SaveText();
         }
 
-        e = e.Replace("C:\\Dropbox\\Eget jox\\!DugTrio\\Legend Of Grindia\\Legend Of Grindia\\Legend Of Grindia", "(path)");
-        e = e.Replace("F:\\Stable Branch\\Legend Of Grindia\\Legend Of Grindia", "(path)");
 
         StringBuilder msg = new(2048);
 
@@ -112,7 +117,7 @@ internal static class ErrorHelper
 
         foreach (KeyValuePair<string, string> kvp in DebugKing.dssExtraErrorInfo)
         {
-            msg.AppendLine("  " + kvp.Key + " = " + kvp.Value);
+            msg.AppendLine($"  [{kvp.Key}] = [{kvp.Value}]");
         }
 
         msg.AppendLine("=== GrindScript Info ===");
@@ -130,8 +135,8 @@ internal static class ErrorHelper
         StreamWriter writer = null;
         try
         {
-            Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Logs"));
-            writer = new StreamWriter(new FileStream(Path.Combine(Globals.AppDataPath, "Logs", logName), FileMode.Create, FileAccess.Write));
+            Directory.CreateDirectory(Globals.LogPath);
+            writer = new StreamWriter(new FileStream(Path.Combine(Globals.LogPath, logName), FileMode.Create, FileAccess.Write));
             writer.Write(msg.ToString());
             Program.Logger.LogCritical("Exception information written to %appdata%\\ModBagman\\Logs!");
         }

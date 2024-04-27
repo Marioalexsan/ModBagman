@@ -1,12 +1,26 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using System.Reflection.Emit;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using System.Security.Policy;
 
 namespace ModBagman.HarmonyPatches;
 
 [HarmonyPatch(typeof(SoundSystem), nameof(SoundSystem.ReadySongInCue))]
 static class ReadySongInCue
 {
+    static void Prefix(ref string sSongName)
+    {
+        var redirects = AudioEntry.MusicRedirects;
+        string audioIDToUse = sSongName;
+
+        if (redirects.ContainsKey(audioIDToUse))
+            audioIDToUse = redirects[audioIDToUse];
+
+        Program.Logger.LogInformation($"Reading music in cue {audioIDToUse} ({sSongName})");
+        sSongName = audioIDToUse;
+    }
+
     // Also used by PlaySong Transpiler
     internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> code, ILGenerator gen)
     {

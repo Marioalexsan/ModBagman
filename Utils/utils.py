@@ -87,10 +87,6 @@ def install():
     output_path = BIN_PATH + 'merged/'
 
     if sog_install_path is not None:
-        try:
-            os.mkdir(sog_install_path + 'Mods')
-        except:
-            pass
         shutil.copyfile(output_path + TARGET_ASSEMBLY, sog_install_path + TARGET_ASSEMBLY)
         print('Installed assembly in SoG directory.')
 

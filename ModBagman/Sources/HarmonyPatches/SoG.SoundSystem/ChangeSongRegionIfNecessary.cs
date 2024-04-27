@@ -32,6 +32,7 @@ static class ChangeSongRegionIfNecessary
         // Set current wavebank on standby if applicable
         if (!_Helper.IsPersistentWaveBank(currentMusicBankName))
         {
+            Program.Logger.LogInformation("Setting music wavebank on standby: " + currentMusicBankName);
             wSystem.System.SetStandbyBank(currentMusicBankName, currentMusicBank);
         }
 

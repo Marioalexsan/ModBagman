@@ -27,7 +27,6 @@
     <!-- Nuget -->
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="Jint" Version="3.0.0-beta-2051" />
         <PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.2" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />

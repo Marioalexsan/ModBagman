@@ -131,8 +131,8 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
     {
         ErrorHelper.ThrowIfNotLoading(Mod);
 
-        if (!bankName.StartsWith(Mod.Name + "_Effects"))
-            throw new ArgumentException("Bank name should follow the pattern \"{Mod}_Effects{Region}\"");
+        if (!bankName.StartsWith(Mod.Name + "_Effects") && bankName != Mod.Name + "_StreamedEffects")
+            throw new ArgumentException("Bank name should follow the pattern \"{Mod}_Effects{Region}\" or \"{Mod}_StreamedEffects\".");
 
         foreach (var cue in cues)
         {
@@ -155,8 +155,8 @@ public class AudioEntry : Entry<CustomEntryID.AudioID>
     {
         ErrorHelper.ThrowIfNotLoading(Mod);
 
-        if (!bankName.StartsWith(Mod.Name + "_Music"))
-            throw new ArgumentException("Bank name should follow the pattern \"{Mod}_Music{Region}\"");
+        if (!bankName.StartsWith(Mod.Name + "_Music") && bankName != Mod.Name + "_StreamedMusic")
+            throw new ArgumentException("Bank name should follow the pattern \"{Mod}_Music{Region}\" or \"{Mod}_StreamedMusic\"");
 
         foreach (var cue in cues)
         {

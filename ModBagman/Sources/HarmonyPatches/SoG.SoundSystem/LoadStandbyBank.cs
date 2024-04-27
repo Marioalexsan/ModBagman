@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Audio;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Xna.Framework.Audio;
 
 namespace ModBagman.HarmonyPatches;
 
@@ -19,10 +20,12 @@ static class LoadStandbyBank
 
             if (_Helper.IsStreamedWaveBank(sStandbyBank))
             {
+                Program.Logger.LogInformation("Loading streamed music bank " + sStandbyBank);
                 wSystem.System.SetStandbyBank(sStandbyBank, new WaveBank(wSystem.AudioEngine, $"{root}/Sound/{sStandbyBank}.xwb", 0, 16));
             }
             else
             {
+                Program.Logger.LogInformation("Loading non-streamed music bank " + sStandbyBank);
                 wSystem.System.SetStandbyBank(sStandbyBank, new WaveBank(wSystem.AudioEngine, $"{root}/Sound/{sStandbyBank}.xwb"));
             }
         }

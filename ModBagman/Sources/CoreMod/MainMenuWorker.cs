@@ -274,7 +274,6 @@ internal static class MainMenuWorker
             {
                 ScriptEngine.CSharp => "C#",
                 ScriptEngine.CSharpScript => "CSX",
-                ScriptEngine.JavaScript => "JS",
                 _ => "???"
             };
 

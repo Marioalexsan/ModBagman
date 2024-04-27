@@ -68,9 +68,6 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
 
     public void AutoAddModCommands(string alias = null)
     {
-        if (Mod is JavaScriptMod)
-            throw new InvalidOperationException("Auto adding mod commands is possible only for C# and CSX mods.");
-
         var methods = AccessTools.GetDeclaredMethods(Mod.GetType())
             .Select(x => (method: x, attrib: x.GetCustomAttribute<ModCommandAttribute>()))
             .Where(x => x.attrib != null);

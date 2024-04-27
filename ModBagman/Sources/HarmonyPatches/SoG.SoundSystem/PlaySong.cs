@@ -1,4 +1,5 @@
-﻿using System.Reflection.Emit;
+﻿using Microsoft.Extensions.Logging;
+using System.Reflection.Emit;
 
 namespace ModBagman.HarmonyPatches;
 
@@ -13,6 +14,7 @@ static class PlaySong
         if (redirects.ContainsKey(audioIDToUse))
             audioIDToUse = redirects[audioIDToUse];
 
+        Program.Logger.LogInformation($"Playing music {audioIDToUse} ({sSongName})");
         sSongName = audioIDToUse;
     }
 

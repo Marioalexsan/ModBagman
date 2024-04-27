@@ -48,7 +48,7 @@ static class __StartupThreadExecute
         MainMenuWorker.UpdateStorySaveCompatibility();
         MainMenuWorker.UpdateArcadeSaveCompatibility();
 
-        if (Program.ReadConfig()?.GetValue("HarmonyDebug", false) ?? false)
+        if (Program.Config.PrintAutoSplitOffsets)
             PrintAutoSplitDebugInfo();
     }
 

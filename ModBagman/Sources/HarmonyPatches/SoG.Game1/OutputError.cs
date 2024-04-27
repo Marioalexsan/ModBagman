@@ -14,6 +14,11 @@ static class OutputError
             Program.Logger.LogWarning("A silent error was triggered!");
             Program.Logger.LogWarning("{e}", e);
         }
+        else
+        {
+            Program.Logger.LogError("An error was triggered!");
+            Program.Logger.LogError("{e}", e);
+        }
 
         // Don't write game errors to disk via this method
         return false;

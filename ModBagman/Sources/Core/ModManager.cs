@@ -1,5 +1,4 @@
 ﻿using ModBagman.Core;
-using Jint;
 using Microsoft.Extensions.Logging;
 using Quests;
 using System.Reflection;

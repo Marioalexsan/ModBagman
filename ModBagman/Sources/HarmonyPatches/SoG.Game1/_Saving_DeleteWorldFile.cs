@@ -5,6 +5,6 @@ static class _Saving_DeleteWorldFile
 {
     static void Postfix(int iFileSlot)
     {
-        File.Delete($"{Globals.AppDataPath}Worlds/{iFileSlot}.wld.gs");
+        File.Delete(Path.Combine(Globals.AppDataPath, $"Worlds/{iFileSlot}.wld.gs"));
     }
 }

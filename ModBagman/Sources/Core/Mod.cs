@@ -16,11 +16,6 @@ public enum ScriptEngine
     CSharp,
 
     /// <summary>
-    /// Scripting is done via JavaScript.
-    /// </summary>
-    JavaScript,
-
-    /// <summary>
     /// Scripting is done via C# script files (.csx)
     /// </summary>
     CSharpScript
@@ -53,9 +48,6 @@ public abstract partial class Mod
     {
         get
         {
-            if (this is JavaScriptMod)
-                return ScriptEngine.JavaScript;
-
             if (CompiledFromCSharp)
                 return ScriptEngine.CSharpScript;
 

@@ -5,6 +5,6 @@ static class _Saving_DeleteCharacterFile
 {
     static void Prefix(int iFileSlot)
     {
-        File.Delete($"{Globals.AppDataPath}Characters/{iFileSlot}.cha.gs");
+        File.Delete(Path.Combine(Globals.AppDataPath, $"Characters/{iFileSlot}.cha.gs"));
     }
 }

@@ -20,7 +20,7 @@ internal static class Program
 
         string defaultText = "Patching Game...";
 
-        if (random.NextDouble() < 0.8f)
+        if (random.NextDouble() < 0.75f)
             return defaultText;
 
         var easterEggs = new Dictionary<string, int>
@@ -31,7 +31,8 @@ internal static class Program
             ["Loading TeddyCode(tm)..."] = 5,
             ["Rigging card drop chances..."] = 5,
             ["Adding lootboxes..."] = 5,
-            ["Modding the mod so that you can mod while modding..."] = 5
+            ["Modding the mod so that you can mod while modding..."] = 5,
+            ["Finding the secrets of Grindea..."] = 10
         };
 
         var weightRolled = random.Next(easterEggs.Values.Sum());
@@ -55,45 +56,54 @@ internal static class Program
 
     public static ILoggerFactory CreateLogFactory(bool multiLine) => LoggerFactory.Create(config =>
     {
-        config.AddFile(Path.Combine(Globals.AppDataPath, "Logs", "EventLog-{Date}.txt"), 
+        config.AddFile(Path.Combine(Globals.LogPath, "EventLog-{Date}.txt"),
             outputTemplate: "{Timestamp:o} {RequestId,13} [{Level:u3}] [{SourceContext:1}] {Message} {NewLine}{Exception}");
     });
 
-    private static IConfigurationBuilder _configBuilder;
-    private static string GetConfigPath() => Path.Combine(Globals.AppDataPath, "ModBagmanConfig.json");
+    private static string GetConfigPath() => Path.Combine(Globals.ModData, "config.json");
 
-    private static IConfiguration _configuration = null;
-    public static IConfiguration ReadConfig()
+    public static Config Config
     {
-        if (_configuration != null)
-            return _configuration;
-
-        if (!File.Exists(GetConfigPath()))
+        get
         {
-            const string BaseConfig = """
+            if (_config != null)
+                return _config;
+
+            if (!File.Exists(GetConfigPath()))
+            {
+                _config = new();
+                File.WriteAllText(GetConfigPath(), System.Text.Json.JsonSerializer.Serialize(_config, new System.Text.Json.JsonSerializerOptions()
                 {
-                    "IgnoredMods": [
-                        
-                    ],
-                    "HarmonyDebug": false,
-                    "PrintAutoSplitOffsets": false
+                    WriteIndented = true
+                }));
+            }
+            else
+            {
+                try
+                {
+                    _config = System.Text.Json.JsonSerializer.Deserialize<Config>(File.ReadAllText(GetConfigPath()));
+
+                    // Reserialize
+                    if (!_config.ConfigReadonly)
+                    {
+                        File.WriteAllText(GetConfigPath(), System.Text.Json.JsonSerializer.Serialize(_config, new System.Text.Json.JsonSerializerOptions()
+                        {
+                            WriteIndented = true
+                        }));
+                    }
                 }
-                """;
+                catch (Exception e)
+                {
+                    Logger.LogError("Failed to read configuration file! Please check if ModBagmanConfig.json is valid.");
+                    Logger.LogError($"{e}");
+                    _config = new();
+                }
+            }
 
-            File.WriteAllText(GetConfigPath(), BaseConfig);
-            Thread.Sleep(10);
-        }
-
-        try
-        {
-            return _configuration = _configBuilder.Build();
-        }
-        catch
-        {
-            Logger.LogError("Failed to read configuration file! Please check if ModBagmanConfig.json is valid.");
-            return null;
+            return _config;
         }
     }
+    private static Config _config;
 
     public static ILogger Logger { get; } = CreateLogFactory(false).CreateLogger("ModBagman");
 
@@ -139,9 +149,17 @@ internal static class Program
 
     private static void CheckFirstTimeBoot()
     {
-        if (!Directory.Exists(Globals.AppDataPath))
+        if (!Directory.Exists(Globals.ModData))
         {
-            var result = MessageBox.Show(AsciiArtResources.CopySavesNotice, "Copy saves?", MessageBoxButton.YesNo);
+            var result = MessageBox.Show($"""                 
+                Seems like this is the first time you're using ModBagman!   
+                The mod tool uses a separate save location from vanilla SoG.
+                Would you like to copy over your saves from the base game?  
+                                                                            
+                SoG savepath:       %appdata%\Secrets of Grindea\           
+                ModBagman savepath: {Globals.AppDataPath}             
+                """, "Copy saves?", MessageBoxButton.YesNo
+            );
 
             Directory.CreateDirectory(Globals.AppDataPath);
             Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Characters"));
@@ -163,7 +181,10 @@ internal static class Program
                 if (File.Exists(Path.Combine(vanilla, "arcademode.sav")))
                     File.Copy(Path.Combine(vanilla, "arcademode.sav"), Path.Combine(Globals.AppDataPath, "arcademode.sav"), true);
 
-                MessageBox.Show(AsciiArtResources.SavesCopiedSuccessfullyNotice, "Saves copied successfully", MessageBoxButton.OK);
+                MessageBox.Show("""
+                    Saves copied!
+                    """, "Saves copied successfully", MessageBoxButton.OK
+                );
             }
         }
     }
@@ -173,10 +194,10 @@ internal static class Program
         // Should force Secrets Of Grindea.exe assembly to be loaded
         _ = typeof(Game1);
 
-        Directory.CreateDirectory("Mods");
-        Directory.CreateDirectory("ModContent");
-        Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Logs"));
-        _configBuilder = new ConfigurationBuilder().AddJsonFile(GetConfigPath());
+        Directory.CreateDirectory(Globals.AppDataPath);
+        Directory.CreateDirectory(Globals.ModContentPath);
+        Directory.CreateDirectory(Globals.ModFolderPath);
+        Directory.CreateDirectory(Globals.LogPath);
 
         // Do patching in two stages
 
@@ -273,10 +294,10 @@ internal static class Program
 
         // Patching game text
         Globals.SpriteBatch.DrawString(font, text, new Vector2(640, 360) / 2, Color.White, 0f, font.MeasureString(text) / 2, 2f, SpriteEffects.None, 0f);
-        
+
         // Current method and total time status
         Globals.SpriteBatch.DrawString(font, status, new Vector2(640, 360) / 2 + new Vector2(0, font.MeasureString(text).Y + 10), Color.White, 0f, font.MeasureString(status) / 2, 2f, SpriteEffects.None, 0f);
-        
+
         Globals.SpriteBatch.End();
 
         GameDrawBase(__instance, gameTime);
@@ -288,14 +309,24 @@ internal static class Program
         Logger.LogInformation("Applying Patches...");
 
         var lastDebugMode = Harmony.DEBUG;
-        Harmony.DEBUG = ReadConfig().GetValue("HarmonyDebug", false);
+        Harmony.DEBUG = Config.HarmonyDebug;
 
         if (Harmony.DEBUG)
             Logger.LogInformation("Using Harmony Debug mode.");
 
         var stopwatch = new Stopwatch();
         stopwatch.Start();
-        HarmonyInstance.PatchAll(typeof(ModManager).Assembly);
+
+        try
+        {
+            HarmonyInstance.PatchAll(typeof(ModManager).Assembly);
+        }
+        catch (Exception e)
+        {
+            Logger.LogCritical($"Patcher crashed: {e}");
+            throw;
+        }
+
         stopwatch.Stop();
 
         Harmony.DEBUG = lastDebugMode;
@@ -315,9 +346,27 @@ internal static class Program
         );
     }
 
-    private static void PrefixStopwatchStart(out Stopwatch __state, MethodBase original)
+    private static void PrefixStopwatchStart(out Stopwatch __state, MethodBase original, PatchInfo patchInfo)
     {
         CurrentMethod = original.Name;
+
+        if (Config.VerbosePatchingLog)
+        {
+            Logger.LogInformation("Harmony is patching " + CurrentMethod);
+
+            foreach (var thing in patchInfo.prefixes)
+                Logger.LogInformation($"-Pre: {thing.PatchMethod.Name}");
+
+            foreach (var thing in patchInfo.postfixes)
+                Logger.LogInformation($"-Post: {thing.PatchMethod.Name}");
+
+            foreach (var thing in patchInfo.transpilers)
+                Logger.LogInformation($"-Trans: {thing.PatchMethod.Name}");
+
+            foreach (var thing in patchInfo.finalizers)
+                Logger.LogInformation($"-Fin: {thing.PatchMethod.Name}");
+        }
+
         __state = new Stopwatch();
         __state.Start();
     }
@@ -343,7 +392,7 @@ internal static class Program
         });
 
         var parserResult = parser.ParseArguments<CLIOptions>(args);
-           
+
         parserResult.WithNotParsed((e) =>
             {
                 Environment.Exit(1);

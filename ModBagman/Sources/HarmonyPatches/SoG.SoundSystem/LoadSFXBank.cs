@@ -28,6 +28,7 @@ static class LoadSFXBank
             }
             if (!wSystem.StandbyWaveBanksSFX.ContainsKey(sName))
             {
+                Program.Logger.LogInformation("Loading non-streamed effect bank " + sName);
                 wSystem.StandbyWaveBanksSFX[sName] = new WaveBank(wSystem.AudioEngine, root + "/Sound/" + sName + ".xwb");
             }
         }

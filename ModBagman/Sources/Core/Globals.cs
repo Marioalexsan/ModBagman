@@ -27,9 +27,12 @@ public static class Globals
     /// </summary>
     public static Game1 Game { get; private set; }
 
-    public static string AppDataPath => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/ModBagman/";
+    public static string ModData => Path.Combine(Directory.GetCurrentDirectory(), "ModBagmanData");
 
-    public static string ModContentPath = "ModContent";
+    public static string AppDataPath => Path.Combine(ModData, "AppData");
+    public static string ModContentPath = Path.Combine(ModData, "ModContent");
+    public static string ModFolderPath = Path.Combine(ModData, "Mods");
+    public static string LogPath => Path.Combine(ModData, "Logs");
 
     /// <summary>
     /// The game's initial (vanilla) version.
@@ -49,7 +52,7 @@ public static class Globals
     internal static void InitializeGlobals()
     {
         Game = (Game1)typeof(Game1).Assembly.GetType("SoG.Program").GetField("game").GetValue(null);
-        Game.sAppData = AppDataPath;
+        Game.sAppData = AppDataPath.TrimEnd('/') + "/";
         Game.xGameSessionData.xRogueLikeSession.bTemporaryHighScoreBlock = true;
         Console = new();
     }

@@ -476,7 +476,7 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
 
         if (EquipType != EquipmentType.None)
         {
-            equipData.deniStatChanges = new Dictionary<Stat, int>(stats);
+            equipData.deniStatChanges = stats;
             equipData.lenSpecialEffects.AddRange(effects);
         }
 

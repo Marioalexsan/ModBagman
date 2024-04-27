@@ -7,6 +7,8 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
+using System.Windows.Controls.Primitives;
+using System.Linq;
 
 namespace ModBagman;
 
@@ -25,7 +27,7 @@ internal static class ModLoader
         return modOrder;
     }
 
-    private static List<Mod> BuildLoadOrder(IEnumerable<Mod> mods)
+    private static List<Mod> BuildLoadOrder(List<Mod> mods)
     {
         static bool CheckDependency(Mod mod, ModDependencyAttribute dep)
         {
@@ -44,21 +46,37 @@ internal static class ModLoader
                 && range.Contains(Semver.SemVersion.FromVersion(mod.Version));
         }
 
+        // Force the builtin mods to load first
+
+        List<Mod> loadOrder = new();
+        List<Mod> readyMods = null;
+
+        Mod vanillaMod = mods.FirstOrDefault(x => x is VanillaMod);
+
+        if (vanillaMod != null)
+        {
+            loadOrder.Add(vanillaMod);
+            mods.Remove(vanillaMod);
+        }
+
+        Mod bagmanMod = mods.FirstOrDefault(x => x is ModBagmanMod);
+
+        if (bagmanMod != null)
+        {
+            loadOrder.Add(bagmanMod);
+            mods.Remove(bagmanMod);
+        }
+
         var dependencyGraph = new Dictionary<Mod, List<Mod>>();
         var dependencies = new Dictionary<Mod, List<ModDependencyAttribute>>();
 
         foreach (var mod in mods)
         {
-            dependencies[mod] = mod is JavaScriptMod jsMod
-                ? jsMod.ListedDependencies.Select(x => new ModDependencyAttribute(x.Key, x.Value)).ToList()
-                : mod.GetType().GetCustomAttributes<ModDependencyAttribute>().ToList();
+            dependencies[mod] = mod.GetType().GetCustomAttributes<ModDependencyAttribute>().ToList();
             dependencyGraph[mod] = new List<Mod>();
 
             Program.Logger.LogInformation($"{dependencies.Count} {dependencyGraph.Count} {mod.Name}");
         }
-
-        List<Mod> loadOrder = new();
-        List<Mod> readyMods = null;
 
         while ((readyMods = dependencies.Where(x => x.Value.Count == 0).Select(x => x.Key).ToList()).Count() > 0)
         {
@@ -112,30 +130,39 @@ internal static class ModLoader
     private static List<string> GetLoadableMods()
     {
         // TODO: Rewrite ignored mods source
-        var ignoredMods = Program.ReadConfig()?.GetSection("IgnoredMods")?.Get<List<string>>() ?? Enumerable.Empty<string>();
+        var ignoredMods = Program.Config.IgnoredMods;
 
-        var modFolder = Path.Combine(Directory.GetCurrentDirectory(), "Mods");
+        var modFolders = Enumerable.Empty<string>().Append(Globals.ModFolderPath).Concat(Program.Config.ExtraModFolders);
+        
+        int totalCount = 0;
+        int selectedCount = 0;
 
-        List<string> fullPathIgnored = ignoredMods.Select(x => Path.Combine(modFolder, x)).ToList();
+        List<string> selectedMods = new();
 
-        var candidates = Directory.GetFiles(modFolder)
-            .Where(x => x.EndsWith(".dll") || x.EndsWith(".zip"))
-            .Concat(Directory.GetDirectories(modFolder).Where(x => x.EndsWith("_jsdev")))
-            .Concat(Directory.GetDirectories(modFolder).Where(x => x.EndsWith("_csxdev")))
-            .ToList();
+        foreach (var modFolder in modFolders)
+        {
+            var candidates = Directory.GetFiles(modFolder)
+                .Where(x => x.EndsWith(".dll") || x.EndsWith(".zip"))
+                .Concat(Directory.GetDirectories(modFolder).Where(x => x.EndsWith("_csxdev")))
+                .ToList();
 
-        var selected = candidates
-            .Where(x => !fullPathIgnored.Contains(x))
-            .ToList();
+            var selected = candidates
+                .Where(x => !ignoredMods.Contains(Path.GetFileName(x.TrimEnd('/', '\\'))))
+                .ToList();
 
-        int totalCount = candidates.Count;
-        int selectedCount = selected.Count;
-        int ignoreCount = totalCount - selectedCount;
+            totalCount += candidates.Count;
+            selectedCount += selected.Count;
 
-        Program.Logger.LogInformation("Found {ignoreCount} mods that are present in the ignore list.", ignoreCount);
-        Program.Logger.LogInformation("Selecting {selectedCount} other mods for loading.", selectedCount);
+            selectedMods.AddRange(selected);
+        }
 
-        return selected;
+        Program.Logger.LogInformation($"Found {totalCount - selectedCount} mods that are present in the ignore list.");
+        Program.Logger.LogInformation($"Selecting {selectedCount} other mods for loading.");
+        Program.Logger.LogInformation($"Also will attempt loading {Program.Config.ExtraModPaths.Count} mods from extra mod paths.");
+
+        selectedMods.AddRange(Program.Config.ExtraModPaths);
+
+        return selectedMods;
     }
 
     private static Mod LoadMod(string path)
@@ -143,17 +170,11 @@ internal static class ModLoader
         if (path.EndsWith(".dll"))
             return LoadCSharpMod(path);
 
-        if (path.EndsWith(".js.zip"))
-            return LoadJavaScriptArchive(path);
-
         if (path.EndsWith(".csx.zip"))
             return LoadCSharpScriptArchive(path);
 
         if (Directory.Exists(path))
         {
-            if (path.EndsWith("_jsdev"))
-                return LoadJavaScriptFolder(path);
-
             if (path.EndsWith("_csxdev"))
                 return LoadCSharpScriptFolder(path);
         }
@@ -208,114 +229,6 @@ internal static class ModLoader
             .Replace(Directory.GetCurrentDirectory() + @"\Content\Mods", "(Mods)")
             .Replace(Directory.GetCurrentDirectory() + @"\Content", "(Content)")
             .Replace(Directory.GetCurrentDirectory(), "(SoG)");
-    }
-
-    private static Mod LoadJavaScriptFolder(string folderPath)
-    {
-        string shortPath = ShortenModPaths(folderPath);
-
-        Program.Logger.LogInformation("Loading JavaScript mod from {path}.", shortPath);
-
-        try
-        {
-            Queue<string> paths = new();
-
-            paths.Enqueue(folderPath);
-
-            Dictionary<string, string> sources = new();
-
-            var split = new[]
-            {
-                '/'
-            };
-
-            while (paths.Count > 0)
-            {
-                var folder = paths.Dequeue();
-                Program.Logger.LogInformation($"Folder {folder}");
-
-                foreach (var path in Directory.GetDirectories(folder))
-                    paths.Enqueue(path);
-
-                foreach (var file in Directory.GetFiles(folder).Where(x => x.EndsWith(".js")))
-                {
-                    using StreamReader reader = new StreamReader(File.OpenRead(file));
-                    sources[file] = reader.ReadToEnd();
-                    Program.Logger.LogInformation($"Script .js {file}");
-                }
-            }
-
-            Program.Logger.LogInformation("Loaded modules: ");
-
-            foreach (var item in sources)
-            {
-                Program.Logger.LogInformation(item.Key);
-            }
-
-            if (!sources.Any(x => x.Key == "index.js"))
-            {
-                Program.Logger.LogError("Failed to load development mod. No index.js entry point found.", shortPath);
-                return null;
-            }
-
-            var mod = new JavaScriptMod(sources);
-
-            mod.ValidateAndSetup();
-
-            return mod;
-        }
-        catch (Exception e)
-        {
-            Program.Logger.LogError("Failed to load mod {modPath}. An unknown exception occurred: {e}", shortPath, ShortenModPaths(e.ToString()));
-        }
-
-        return null;
-    }
-
-    private static Mod LoadJavaScriptArchive(string zipPath)
-    {
-        string shortPath = ShortenModPaths(zipPath);
-
-        Program.Logger.LogInformation("Loading JavaScript mod from {path}.", shortPath);
-
-        try
-        {
-            using ZipArchive archive = ZipFile.OpenRead(zipPath);
-
-            var split = new[]
-            {
-                '/'
-            };
-
-            var pathParts = archive.Entries.First().FullName.Split(split, 2);
-            var isStacked = pathParts.Length == 2 && pathParts[0] == Path.GetFileNameWithoutExtension(zipPath);
-
-            if (!archive.Entries.Any(x => (isStacked ? x.FullName.Split(split, 2)[1] : x.FullName) == "index.js"))
-            {
-                Program.Logger.LogError("Failed to load mod. No index.js entry point found.", shortPath);
-                return null;
-            }
-
-            Dictionary<string, string> sources = new();
-
-            foreach (var entry in archive.Entries.Where(x => x.Name.EndsWith(".js")))
-            {
-                using StreamReader reader = new StreamReader(entry.Open());
-                sources[isStacked ? entry.FullName.Split(split, 2)[1] : entry.FullName] = reader.ReadToEnd();
-            }
-
-            var mod = new JavaScriptMod(sources);
-
-            mod.ValidateAndSetup();
-
-            return mod;
-        }
-        catch (Exception e)
-        {
-            Program.Logger.LogError("Failed to load mod {modPath}. An unknown exception occurred: {e}", shortPath, ShortenModPaths(e.ToString()));
-        }
-
-        return null;
     }
 
     private static Mod LoadCSharpScriptFolder(string folderPath)
