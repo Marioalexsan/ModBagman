@@ -436,9 +436,9 @@ public class ItemEntry : Entry<ItemCodex.ItemTypes>
             case EquipmentType.Facegear:
                 FacegearInfo faceData = (equipData = new FacegearInfo(GameID)) as FacegearInfo;
 
-                Array.Copy(FacegearOverHair, faceData.abOverHair, 4);
-                Array.Copy(FacegearOverHat, faceData.abOverHat, 4);
-                Array.Copy(FacegearOffsets, faceData.av2RenderOffsets, 4);
+                faceData.abOverHair = FacegearOverHair;
+                faceData.abOverHat = FacegearOverHat;
+                faceData.av2RenderOffsets = FacegearOffsets;
 
                 break;
             case EquipmentType.Hat:

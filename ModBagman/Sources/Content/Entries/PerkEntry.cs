@@ -31,12 +31,15 @@ public class PerkEntry : Entry<RogueLikeMode.Perks>
     /// </summary>
     public string Name { get; set; } = "Bishop's Shenanigans";
 
-    public string Description { get; set; }
+    /// <summary>
+    /// Gets or sets the description of this perk.
+    /// </summary>
+    public string Description { get; set; } = "It's some weird perk or moldable!";
 
     /// <summary>
     /// Gets or sets the icon of the perk. The texture path is relative to "Content/".
     /// </summary>
-    public string TexturePath { get; set; } = "It's some weird perk or moldable!";
+    public string TexturePath { get; set; }
 
     /// <summary>
     /// Gets or sets the condition for the perk to be available in Bishop's selection.
