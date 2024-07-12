@@ -2,7 +2,6 @@
 using System.Reflection.Emit;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using System.Security.Policy;
 
 namespace ModBagman.HarmonyPatches;
 

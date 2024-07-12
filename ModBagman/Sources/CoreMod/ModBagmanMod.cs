@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Watchers;
-
-namespace ModBagman;
+﻿namespace ModBagman;
 
 using Version = System.Version;
 

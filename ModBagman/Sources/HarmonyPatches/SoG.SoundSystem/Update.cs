@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework.Audio;
-
-namespace ModBagman.HarmonyPatches;
+﻿namespace ModBagman.HarmonyPatches;
 
 [HarmonyPatch(typeof(SoundSystem), "_Update")]
 static class _Update

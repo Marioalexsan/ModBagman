@@ -1,22 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Watchers;
 
 namespace ModBagman;
 
 internal partial class ModBagmanMod : Mod
 {
-    [ModCommand("Clear", Description = "Clears the console.")]
+    [ModCommand(Description = "Clears the console.")]
     private void Clear()
     {
         Globals.Console?.ClearMessages();
     }
 
-    [ModCommand("Help", Description = "Show ModBagman commands.")]
+    [ModCommand(Description = "Show ModBagman commands.")]
     private void Help(string[] args, int connection)
     {
         if (args.Length > 1)
@@ -109,7 +104,7 @@ internal partial class ModBagmanMod : Mod
         }
     }
 
-    [ModCommand("ModList", Description = "Show list of available mods.")]
+    [ModCommand(Description = "Show list of available mods.")]
     private void ModList(string[] args, int connection)
     {
         CAS.AddChatMessage($"[{Name}] Mod Count: {ModManager.Mods.Count}");
@@ -133,7 +128,7 @@ internal partial class ModBagmanMod : Mod
             CAS.AddChatMessage(line);
     }
 
-    [ModCommand("RenderColliders", Description = "Render level colliders\n-c : Render combat\n-l : Render level \n-m : Render movement")]
+    [ModCommand(Description = "Render level colliders\n-c : Render combat\n-l : Render level \n-m : Render movement")]
     private void RenderColliders(string[] args, int connection)
     {
         if (args.Any(x => !(x == "-c" || x == "-l" || x == "-m")))
@@ -170,7 +165,7 @@ internal partial class ModBagmanMod : Mod
         }
     }
 
-    [ModCommand("Spawn", Description = "Spawns an entity in the world.\nValid entities: Item, Pin")]
+    [ModCommand(Description = "Spawns an entity in the world.\nValid entities: Item, Pin")]
     private void Spawn(string[] args, int connection)
     {
         if (NetUtils.IsClient)
@@ -259,7 +254,7 @@ internal partial class ModBagmanMod : Mod
         }
     }
 
-    [ModCommand("ToggleDebug")]
+    [ModCommand]
     private void ToggleDebugMode(string[] args, int connection)
     {
         Globals.Game.bUseDebugInRelease = !Globals.Game.bUseDebugInRelease;
@@ -271,8 +266,7 @@ internal partial class ModBagmanMod : Mod
         }
     }
 
-
-    [ModCommand("PlayMusic")]
+    [ModCommand]
     private void PlayMusic(string[] args, int connection)
     {
         if (args.Length != 2)
@@ -301,7 +295,7 @@ internal partial class ModBagmanMod : Mod
         Globals.Game.xSoundSystem.PlaySong(musicID.ToString(), true);
     }
 
-    [ModCommand("PlayEffect")]
+    [ModCommand]
     private void PlayEffect(string[] args, int connection)
     {
         if (args.Length != 2)
@@ -330,4 +324,18 @@ internal partial class ModBagmanMod : Mod
         Globals.Game.xSoundSystem.PlayCue(effectID.ToString(), Globals.Game.xLocalPlayer.xEntity.xTransform.v2Pos);
     }
 
+    internal bool IsCameraInFreemode = false;
+
+    [ModCommand]
+    private void FreemodeCamera()
+    {
+        IsCameraInFreemode = !IsCameraInFreemode;
+        CAS.AddChatMessage($"Freemode camera is now {(IsCameraInFreemode ? "On" : "Off")}.");
+    }
+
+    [ModCommand]
+    private void CameraPos()
+    {
+        CAS.AddChatMessage($"Camera position: {Globals.Game.xCamera.v2TopLeft}");
+    }
 }

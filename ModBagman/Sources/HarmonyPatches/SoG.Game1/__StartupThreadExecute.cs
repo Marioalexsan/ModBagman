@@ -2,11 +2,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework;
 using Quests;
 using System.Text;
-using Microsoft.Extensions.Primitives;
-using Microsoft.Extensions.Configuration;
 
 namespace ModBagman.HarmonyPatches;
 

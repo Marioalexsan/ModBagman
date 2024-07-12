@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-
-namespace ModBagman;
+﻿namespace ModBagman;
 
 /// <summary>
 /// Represents a modded status effect.

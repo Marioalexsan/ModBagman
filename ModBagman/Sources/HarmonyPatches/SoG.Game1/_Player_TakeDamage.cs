@@ -1,6 +1,4 @@
-﻿using SoG;
-
-namespace ModBagman.HarmonyPatches;
+﻿namespace ModBagman.HarmonyPatches;
 
 [HarmonyPatch(typeof(Game1), nameof(Game1._Player_TakeDamage))]
 static class _Player_TakeDamage

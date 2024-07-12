@@ -1,25 +1,7 @@
-﻿using Lidgren.Network;
-using Microsoft.Xna.Framework;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 
 namespace ModBagman;
-
-/// <summary>
-/// A list of supported implementations for mods.
-/// </summary>
-public enum ScriptEngine
-{
-    /// <summary>
-    /// Uses native C# assemblies for mod code.
-    /// </summary>
-    CSharp,
-
-    /// <summary>
-    /// Scripting is done via C# script files (.csx)
-    /// </summary>
-    CSharpScript
-}
 
 /// <summary>
 /// The base class for all mods.
@@ -38,22 +20,6 @@ public abstract partial class Mod
     /// Builtin mods are first party mods that might need special treatment by the tool.
     /// </summary>
     internal virtual bool IsBuiltin => false;
-
-    internal bool CompiledFromCSharp { get; set; } = false;
-
-    /// <summary>
-    /// Gets the script engine used for this mod.
-    /// </summary>
-    public ScriptEngine ScriptEngine
-    {
-        get
-        {
-            if (CompiledFromCSharp)
-                return ScriptEngine.CSharpScript;
-
-            return ScriptEngine.CSharp;
-        }
-    } 
 
     /// <summary>
     /// Gets the name of the mod. <para/>
@@ -78,7 +44,7 @@ public abstract partial class Mod
     /// <summary>
     /// Gets the default logger for this mod.
     /// </summary>
-    public ILogger Logger { get; protected set; } = Program.CreateLogFactory(false).CreateLogger("UnknownMod");
+    public ILogger Logger { get; protected set; } = Program.LogFactory.CreateLogger("UnknownMod");
 
     /// <summary>
     /// Gets the path to the mod's assets, relative to the "ModContent" folder.
@@ -96,10 +62,6 @@ public abstract partial class Mod
     /// Gets whenever the mod is currently being loaded.
     /// </summary>
     public bool InLoad => ModManager.CurrentlyLoadingMod == this;
-
-    public Mod()
-    {
-    }
 
     /// <summary>
     /// Gets an active mod using its nameID.
@@ -126,6 +88,6 @@ public abstract partial class Mod
         if (!NameRegex.IsMatch(Name))
             throw new InvalidOperationException($"Mod identifier {Name} cannot be used as an identifier. Names must follow the following regex: {NameRegexString}.");
 
-        Logger = Program.CreateLogFactory(false).CreateLogger(Name);
+        Logger = Program.LogFactory.CreateLogger(Name);
     }
 }

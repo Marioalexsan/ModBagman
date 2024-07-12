@@ -26,14 +26,8 @@
 
     <!-- Nuget -->
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="Lib.Harmony" Version="2.3.0-prerelease.2" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
-        <PackageReference Include="RestSharp" Version="110.2.0" />
         <PackageReference Include="Semver" Version="3.0.0-beta.1" />
         <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.1-dev-00077" />
         <PackageReference Include="System.IO.Compression" Version="4.3.0" />
@@ -64,6 +58,7 @@
         <Reference Include="Steamworks.NET">
             <HintPath>..\Dependencies\Steamworks.NET.dll</HintPath>
         </Reference>
+        <Reference Include="System.Reflection.Emit.ILGeneration" />
         <Reference Include="System.Data.DataSetExtensions" />
         <Reference Include="System.Net.Http" />
     </ItemGroup>

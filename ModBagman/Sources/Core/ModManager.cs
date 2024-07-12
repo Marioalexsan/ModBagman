@@ -1,9 +1,5 @@
-﻿using ModBagman.Core;
-using Microsoft.Extensions.Logging;
-using Quests;
-using System.Reflection;
+﻿using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using SoG;
 
 namespace ModBagman;
 
@@ -17,8 +13,6 @@ internal static class ModManager
     internal static List<Mod> Mods { get; } = new List<Mod>();
 
     private static readonly Harmony _modPatcher = new("ModBagman.ModPatches");
-
-    internal static ModDatabaseManifest ModDatabase { get; private set; }
 
     internal static VanillaMod Vanilla => Mods.Find(x => x.Name == VanillaMod.ModName) as VanillaMod;
 
@@ -126,7 +120,7 @@ internal static class ModManager
     {
         Program.Logger.LogInformation("Patching mods...");
 
-        foreach (var assembly in mods.Where(x => !x.IsBuiltin && x.ScriptEngine == ScriptEngine.CSharp || x.ScriptEngine == ScriptEngine.CSharpScript).Select(x => x.GetType().Assembly).Distinct())
+        foreach (var assembly in mods.Where(x => !x.IsBuiltin).Select(x => x.GetType().Assembly).Distinct())
         {
             Program.Logger.LogInformation($"Patching assembly {assembly.GetName()}...");
 
@@ -168,12 +162,5 @@ internal static class ModManager
         {
             mod.PostLoad();
         }
-    }
-
-    private static void FetchModDatabase()
-    {
-        ModDatabase = ModDatabaseManifest.FetchManifest();
-
-        Program.Logger.LogInformation("Mod database: {}", JsonSerializer.Serialize(ModDatabase));
     }
 }

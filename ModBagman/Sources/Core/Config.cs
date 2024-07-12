@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace ModBagman;
+﻿namespace ModBagman;
 
 internal class Config
 {

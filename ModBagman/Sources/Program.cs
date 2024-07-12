@@ -1,10 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
-using Microsoft.Extensions.Configuration;
-using CommandLine;
-using CommandLine.Text;
-using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using System.Windows;
 using Microsoft.Xna.Framework;
@@ -54,7 +50,7 @@ internal static class Program
 
     public static DateTime LaunchTime { get; private set; }
 
-    public static ILoggerFactory CreateLogFactory(bool multiLine) => LoggerFactory.Create(config =>
+    public static ILoggerFactory LogFactory { get; } = LoggerFactory.Create(config =>
     {
         config.AddFile(Path.Combine(Globals.LogPath, "EventLog-{Date}.txt"),
             outputTemplate: "{Timestamp:o} {RequestId,13} [{Level:u3}] [{SourceContext:1}] {Message} {NewLine}{Exception}");
@@ -105,23 +101,13 @@ internal static class Program
     }
     private static Config _config;
 
-    public static ILogger Logger { get; } = CreateLogFactory(false).CreateLogger("ModBagman");
-
-    public static ILogger ExceptionLogger { get; } = CreateLogFactory(true).CreateLogger("ModBagman");
+    public static ILogger Logger { get; } = LogFactory.CreateLogger("ModBagman");
 
     internal static bool HasCrashed { get; set; } = false;
 
     public static void Main(string[] args)
     {
         LaunchTime = DateTime.Now;
-
-        var options = ParseArguments(args);
-
-        if (options.Version)
-        {
-            Logger.LogInformation($"ModBagman version {Globals.ModBagmanVersion}.");
-            return;
-        }
 
         try
         {
@@ -381,23 +367,5 @@ internal static class Program
                 Logger.LogWarning($"Patch is taking a long time! ({__state.Elapsed.TotalSeconds:F2}s) ({original.Name})");
         }
         CurrentMethod = "";
-    }
-
-    private static CLIOptions ParseArguments(string[] args)
-    {
-        var parser = new Parser(config =>
-        {
-            config.HelpWriter = Console.Out;
-            config.AutoVersion = false;
-        });
-
-        var parserResult = parser.ParseArguments<CLIOptions>(args);
-
-        parserResult.WithNotParsed((e) =>
-            {
-                Environment.Exit(1);
-            });
-
-        return parserResult.Value;
     }
 }

@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Security.Policy;
-
-namespace ModBagman.HarmonyPatches;
+﻿namespace ModBagman.HarmonyPatches;
 
 [HarmonyPatch(typeof(SoundSystem), nameof(SoundSystem.CheckForSoundRegion))]
 static class CheckForSoundRegion

@@ -1,14 +1,5 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using System.IO.Compression;
-using Microsoft.CodeAnalysis.CSharp;
-using System.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
-using System.Windows.Controls.Primitives;
-using System.Linq;
 
 namespace ModBagman;
 
@@ -170,15 +161,6 @@ internal static class ModLoader
         if (path.EndsWith(".dll"))
             return LoadCSharpMod(path);
 
-        if (path.EndsWith(".csx.zip"))
-            return LoadCSharpScriptArchive(path);
-
-        if (Directory.Exists(path))
-        {
-            if (path.EndsWith("_csxdev"))
-                return LoadCSharpScriptFolder(path);
-        }
-
         return null;
     }
 
@@ -231,102 +213,6 @@ internal static class ModLoader
             .Replace(Directory.GetCurrentDirectory(), "(SoG)");
     }
 
-    private static Mod LoadCSharpScriptFolder(string folderPath)
-    {
-        string shortPath = ShortenModPaths(folderPath);
-
-        Program.Logger.LogInformation("Loading CSX mod from {path}.", shortPath);
-
-        try
-        {
-            Queue<string> paths = new();
-
-            paths.Enqueue(folderPath);
-
-            Dictionary<string, string> sources = new();
-
-            var split = new[]
-            {
-                '/'
-            };
-
-            while (paths.Count > 0)
-            {
-                var folder = paths.Dequeue();
-                Program.Logger.LogInformation($"Folder {folder}");
-
-                foreach (var path in Directory.GetDirectories(folder))
-                    paths.Enqueue(path);
-
-                foreach (var file in Directory.GetFiles(folder).Where(x => x.EndsWith(".csx") || x.EndsWith(".cs")))
-                {
-                    using StreamReader reader = new StreamReader(File.OpenRead(file));
-                    sources[file] = reader.ReadToEnd();
-                    Program.Logger.LogInformation($"Script .csx {file}");
-                }
-            }
-
-            Program.Logger.LogInformation("Loaded modules: ");
-
-            foreach (var item in sources)
-            {
-                Program.Logger.LogInformation(item.Key);
-            }
-
-            var mod = CompileCSharpScriptAssembly(sources);
-
-            mod.ValidateAndSetup();
-
-            return mod;
-        }
-        catch (Exception e)
-        {
-            Program.Logger.LogError("Failed to load mod {modPath}. An unknown exception occurred: {e}", shortPath, ShortenModPaths(e.ToString()));
-        }
-
-        return null;
-    }
-
-    private static Mod LoadCSharpScriptArchive(string zipPath)
-    {
-        string shortPath = ShortenModPaths(zipPath);
-
-        Program.Logger.LogInformation("Loading CSX mod from {path}.", shortPath);
-
-        try
-        {
-            using ZipArchive archive = ZipFile.OpenRead(zipPath);
-
-            var split = new[]
-            {
-                '/'
-            };
-
-            var pathParts = archive.Entries.First().FullName.Split(split, 2);
-            var isStacked = pathParts.Length == 2 && pathParts[0] == Path.GetFileNameWithoutExtension(zipPath);
-
-            Dictionary<string, string> sources = new();
-
-            foreach (var entry in archive.Entries.Where(x => x.Name.EndsWith(".csx") || x.Name.EndsWith(".cs")))
-            {
-                using StreamReader reader = new StreamReader(entry.Open());
-                sources[isStacked ? entry.FullName.Split(split, 2)[1] : entry.FullName] = reader.ReadToEnd();
-            }
-
-            var mod = CompileCSharpScriptAssembly(sources);
-
-            mod.ValidateAndSetup();
-
-            return mod;
-        }
-        catch (Exception e)
-        {
-            Program.Logger.LogError("Failed to load mod {modPath}. An unknown exception occurred: {e}", shortPath, ShortenModPaths(e.ToString()));
-        }
-
-        return null;
-    }
-
     private static Mod LoadCSharpMod(string assemblyPath)
     {
         string shortPath = ShortenModPaths(assemblyPath);
@@ -355,95 +241,5 @@ internal static class ModLoader
         }
 
         return null;
-    }
-
-    private static readonly Dictionary<string, MetadataReference> References;
-
-    private static void AddAssembly(string assemblyDll)
-    {
-        var file = Path.GetFullPath(assemblyDll);
-
-        if (!File.Exists(file))
-        {
-            file = Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location), assemblyDll);
-
-            if (!File.Exists(file))
-            {
-                Program.Logger.LogWarning($"Couldn't find assembly {assemblyDll}: {file}");
-                return;
-            }
-        }
-
-        if (References.Any(x => x.Key == file))
-            return;
-
-        Program.Logger.LogInformation($"Loading assembly {assemblyDll}: {file}");
-        var reference = MetadataReference.CreateFromFile(file);
-
-        References[file] = reference;
-    }
-
-    private static void AddAssembly(Type type)
-    {
-        AddAssembly(type.Assembly.Location);
-    }
-
-    static ModLoader()
-    {
-        References = new();
-
-        AddAssembly(typeof(Mod));
-        AddAssembly(typeof(Game1));
-        AddAssembly("mscorlib.dll");
-        AddAssembly("System.dll");
-        AddAssembly("System.Core.dll");
-        AddAssembly("Microsoft.CSharp.dll");
-        AddAssembly("System.Net.Http.dll");
-        AddAssembly("System.IO.Compression");
-        AddAssembly("System.IO.Compression.FileSystem.dll");
-        AddAssembly(typeof(Vector2));
-        AddAssembly(typeof(Game));
-        AddAssembly(typeof(SpriteBatch));
-        AddAssembly(typeof(SoundSystem));
-        AddAssembly(typeof(ZipArchive));
-    }
-
-    private static Mod CompileCSharpScriptAssembly(Dictionary<string, string> sources)
-    {
-        var compilationOptions = new CSharpCompilationOptions(
-            Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary,
-            optimizationLevel: Microsoft.CodeAnalysis.OptimizationLevel.Debug
-            );
-
-        var syntaxTrees = sources.Select(x => SyntaxFactory.ParseSyntaxTree(x.Value));
-
-        var compilation = CSharpCompilation.Create($"ModAssembly-{Guid.NewGuid()}")
-            .WithOptions(compilationOptions)
-            .WithReferences(References.Values.ToArray())
-            .AddSyntaxTrees(syntaxTrees);
-
-        using var codeStream = new MemoryStream();
-
-        var compilationResult = compilation.Emit(codeStream);
-
-        if (!compilationResult.Success)
-        {
-            int maxErrors = 10;
-
-            var sb = new StringBuilder();
-            foreach (var diag in compilationResult.Diagnostics.Take(maxErrors))
-            {
-                sb.AppendLine(diag.ToString());
-            }
-
-            throw new InvalidOperationException("CSharp script mod is invalid\n" + sb.ToString());
-        }
-
-        var assembly = Assembly.Load(codeStream.ToArray());
-        Type type = assembly.DefinedTypes.First(t => t.BaseType == typeof(Mod));
-        Mod mod = Activator.CreateInstance(type, true) as Mod;
-        mod.CompiledFromCSharp = true;
-
-        return mod;
     }
 }

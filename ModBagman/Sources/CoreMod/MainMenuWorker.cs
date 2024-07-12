@@ -270,14 +270,7 @@ internal static class MainMenuWorker
 
         foreach (Mod mod in ModManager.Mods.Where(x => x.Name != VanillaMod.ModName))
         {
-            string modType = mod.ScriptEngine switch
-            {
-                ScriptEngine.CSharp => "C#",
-                ScriptEngine.CSharpScript => "CSX",
-                _ => "???"
-            };
-
-            message += mod.Name + " v." + (mod.Version?.ToString() ?? "Unknown") + $" ({modType})" + "\n";
+            message += mod.Name + " v." + (mod.Version?.ToString() ?? "Unknown") + "\n";
         }
 
         RenderMessage(message.TrimEnd('\n'), 422, 243);

@@ -1,6 +1,4 @@
-﻿using CommandLine;
-using Microsoft.Extensions.Logging;
-using MonoMod.Utils;
+﻿using Microsoft.Extensions.Logging;
 using System.Reflection;
 
 namespace ModBagman;
@@ -76,9 +74,11 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
         {
             bool success = false;
 
+            var commandName = attrib.Command ?? method.Name;
+
             try
             {
-                AddCommand(attrib.Command, method.CreateDelegate(typeof(CommandParser), method.IsStatic ? null : Mod), attrib.Description);
+                AddCommand(commandName, method.CreateDelegate(typeof(CommandParser), method.IsStatic ? null : Mod), attrib.Description);
                 success = true;
             }
             catch { }
@@ -87,7 +87,7 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
             {
                 try
                 {
-                    AddCommand(attrib.Command, method.CreateDelegate(typeof(Action<string[], int>), method.IsStatic ? null : Mod), attrib.Description);
+                    AddCommand(commandName, method.CreateDelegate(typeof(Action<string[], int>), method.IsStatic ? null : Mod), attrib.Description);
                     success = true;
                 }
                 catch { }
@@ -97,7 +97,7 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
             {
                 try
                 {
-                    AddCommand(attrib.Command, method.CreateDelegate(typeof(Action<string[]>), method.IsStatic ? null : Mod), attrib.Description);
+                    AddCommand(commandName, method.CreateDelegate(typeof(Action<string[]>), method.IsStatic ? null : Mod), attrib.Description);
                     success = true;
                 }
                 catch { }
@@ -107,7 +107,7 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
             {
                 try
                 {
-                    AddCommand(attrib.Command, method.CreateDelegate(typeof(Action), method.IsStatic ? null : Mod), attrib.Description);
+                    AddCommand(commandName, method.CreateDelegate(typeof(Action), method.IsStatic ? null : Mod), attrib.Description);
                     success = true;
                 }
                 catch { }
@@ -115,7 +115,7 @@ public class CommandEntry : Entry<CustomEntryID.CommandID>
 
             if (!success)
             {
-                Program.Logger.LogWarning($"Couldn't add command {attrib.Command}: The given method isn't an acceptable type for a mod command.");
+                Program.Logger.LogWarning($"Couldn't add command {commandName}: The given method isn't an acceptable type for a mod command.");
             }
         }
 

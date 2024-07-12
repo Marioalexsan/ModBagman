@@ -1,6 +1,5 @@
 ﻿using Quests;
 using System.Reflection;
-using static SoG.IEntity;
 
 namespace ModBagman;
 

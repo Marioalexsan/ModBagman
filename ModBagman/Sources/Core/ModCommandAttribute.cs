@@ -7,11 +7,8 @@
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class ModCommandAttribute : Attribute
 {
-    public ModCommandAttribute(string command)
+    public ModCommandAttribute(string command = null)
     {
-        if (string.IsNullOrWhiteSpace(command))
-            throw new ArgumentException("Command must be a non-empty string.");
-
         Command = command;
     }
 

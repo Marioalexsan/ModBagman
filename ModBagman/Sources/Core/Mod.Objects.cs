@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Xna.Framework;
 
 namespace ModBagman;
 
