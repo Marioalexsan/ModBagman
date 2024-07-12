@@ -25,7 +25,7 @@ static class _Menu_Update
     static void Postfix()
     {
         Globals.Console?.Update();
-        MainMenuWorker.MenuUpdate();
+        MainMenuWorker.MenuInterface();
     }
 
     static bool IsDevConsoleActive() => Globals.Console.Active;

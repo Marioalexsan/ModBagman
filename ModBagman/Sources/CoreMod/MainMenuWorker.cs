@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ModBagman;
 
@@ -9,18 +11,39 @@ namespace ModBagman;
 /// </summary>
 internal static class MainMenuWorker
 {
-    private class ModMenu
+    private static class ModMenu
     {
-        private int _selection = 0;
-        public int Selection
+        public static int Selection
         {
             get => _selection;
             set => _selection = Math.Min(Math.Max(value, MinSelection), MaxSelection);
         }
+        private static int _selection = 0;
 
-        public readonly int MinSelection = 0;
+        public const int MinSelection = 0;
+        public const int MaxSelection = 1;
+    }
 
-        public readonly int MaxSelection = 1;
+    private static class ModListMenu
+    {
+        private static int SanitizeSelection(int value) => Math.Min(Math.Max(value, 0), ModManager.Mods.Where(x => x.Name != VanillaMod.ModName).Count() - 1);
+        private static int RestrictScroll(int value) => Math.Min(Math.Max(value, Selection - MaxItems + 1), Selection);
+
+        public static int ScrollStart
+        {
+            get => _scrollStart = RestrictScroll(_scrollStart);
+            set => _scrollStart = RestrictScroll(value);
+        }
+        private static int _scrollStart = 0;
+
+        public static int Selection
+        {
+            get => _selection = SanitizeSelection(_selection);
+            set => _selection = SanitizeSelection(value);
+        }
+        private static int _selection = 0;
+
+        public const int MaxItems = 8;
     }
 
     public static readonly GlobalData.MainMenu.MenuLevel ReservedModMenuID = (GlobalData.MainMenu.MenuLevel)300;
@@ -29,9 +52,9 @@ internal static class MainMenuWorker
 
     private static SaveCompatibility _arcadeSave;
 
-    private static ModMenu _modMenu = new();
-
     private static int _previousTopMenuSelection;
+
+    private static int CurrentSubMenu = 0;
 
     public static void UpdateStorySaveCompatibility()
     {
@@ -123,7 +146,6 @@ internal static class MainMenuWorker
         Globals.SpriteBatch.DrawString(FontManager.GetFont(FontManager.FontType.Reg7), message, new Vector2(x, y - (int)measure.Y / 2), Color.White * alpha);
     }
 
-
     public static void PostTopMenuInterface()
     {
         var menuData = Globals.Game.xGlobalData.xMainMenuData;
@@ -151,44 +173,26 @@ internal static class MainMenuWorker
         }
     }
 
-    public static void RenderReloadModsButton()
-    {
-        var menuData = Globals.Game.xGlobalData.xMainMenuData;
-
-        Color selected = Color.White;
-        Color notSelected = Color.Gray * 0.8f;
-
-        var text = "Reload Mods";
-        var font = FontManager.GetFont(FontManager.FontType.Verdana12);
-        Vector2 center = font.MeasureString(text) / 2f;
-
-        Color colorToUse = menuData.iTopMenuSelection == 4 ? selected : notSelected;
-
-        Globals.Game._RenderMaster_RenderTextWithOutline(font, text, new Vector2(160, 268) - center, Vector2.Zero, 1f, colorToUse, Color.Black);
-    }
-
     public static void RenderModMenuButton()
     {
         var menuData = Globals.Game.xGlobalData.xMainMenuData;
         var spriteBatch = Globals.SpriteBatch;
+        float alpha = menuData.fCurrentMenuAlpha;
+
+        Globals.Game._Menu_RenderContentBox(spriteBatch, alpha, new Rectangle(100, 219, 121, 56));
 
         Color selected = Color.White;
         Color notSelected = Color.Gray * 0.8f;
-        float alpha = menuData.fCurrentMenuAlpha;
 
         var texture = ModBagmanResources.ModMenu;
         Vector2 center = new(texture.Width / 2, texture.Height / 2);
 
         Color colorToUse = menuData.iTopMenuSelection == 4 ? selected : notSelected;
 
-        spriteBatch.Draw(texture, new Vector2(160 - center.X, 245 - center.Y), null, colorToUse, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
-
-        //var font = FontManager.GetFont(FontManager.FontType.Bold10);
-        //center = font.MeasureString("(Unimplemented)") / 2f;
-        //Globals.Game._RenderMaster_RenderTextWithOutline(font, "(Unimplemented)", new Vector2(160, 268) - center, Vector2.Zero, 1f, colorToUse, Color.Black);
+        spriteBatch.Draw(texture, new Vector2(160 - center.X, 245 - center.Y), null, colorToUse * alpha, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
     }
 
-    public static void MenuUpdate()
+    public static void MenuInterface()
     {
         if (Globals.Game.xGlobalData.xMainMenuData.enTargetMenuLevel != GlobalData.MainMenu.MenuLevel.Null)
         {
@@ -197,7 +201,28 @@ internal static class MainMenuWorker
 
         if (Globals.Game.xGlobalData.xMainMenuData.enMenuLevel == ReservedModMenuID)
         {
-            ModMenuInterface();
+            if (CurrentSubMenu == 0)
+                ModMenuInterface();
+
+            else if (CurrentSubMenu == 1)
+                ModListInterface();
+        }
+    }
+
+    public static void MenuRender()
+    {
+        if (Globals.Game.xGlobalData.xMainMenuData.enTargetMenuLevel != GlobalData.MainMenu.MenuLevel.Null)
+        {
+            return;
+        }
+
+        if (Globals.Game.xGlobalData.xMainMenuData.enMenuLevel == ReservedModMenuID)
+        {
+            if (CurrentSubMenu == 0)
+                ModMenuRender();
+
+            else if (CurrentSubMenu == 1)
+                ModListRender();
         }
     }
 
@@ -205,18 +230,18 @@ internal static class MainMenuWorker
     {
         var input = Globals.Game.xInput_Menu;
 
-        var previousSelection = _modMenu.Selection;
+        var previousSelection = ModMenu.Selection;
 
         if (input.Down.bPressed)
         {
-            _modMenu.Selection++;
+            ModMenu.Selection++;
         }
         else if (input.Up.bPressed)
         {
-            _modMenu.Selection--;
+            ModMenu.Selection--;
         }
 
-        if (previousSelection != _modMenu.Selection)
+        if (previousSelection != ModMenu.Selection)
         {
             Globals.Game.xSoundSystem.PlayInterfaceCue("Menu_Move");
         }
@@ -225,12 +250,13 @@ internal static class MainMenuWorker
         {
             Globals.Game.xSoundSystem.PlayInterfaceCue("Menu_Change");
 
-            switch (_modMenu.Selection)
+            switch (ModMenu.Selection)
             {
                 case 0:
                     ModManager.Reload();
                     break;
                 case 1:
+                    CurrentSubMenu = 1;
                     break;
             }
 
@@ -243,7 +269,7 @@ internal static class MainMenuWorker
         }
     }
 
-    public static void ModMenuRender()
+    private static void ModMenuRender()
     {
         float alpha = Globals.Game.xGlobalData.xMainMenuData.fCurrentMenuAlpha;
         Color selected = Color.White;
@@ -255,24 +281,95 @@ internal static class MainMenuWorker
 
         Texture2D reloadModsTex = ModBagmanResources.ReloadMods;
         Vector2 reloadModsCenter = new(reloadModsTex.Width / 2, reloadModsTex.Height / 2);
-        Color reloadModsColor = _modMenu.Selection == 0 ? selected : notSelected;
+        Color reloadModsColor = ModMenu.Selection == 0 ? selected : notSelected;
 
         spriteBatch.Draw(reloadModsTex, new Vector2(320, 225), null, reloadModsColor, 0f, reloadModsCenter, 1f, SpriteEffects.None, 0f);
 
         Texture2D modListTex = ModBagmanResources.ModList;
         Vector2 modListCenter = new(modListTex.Width / 2, modListTex.Height / 2);
-        Color modListColor = _modMenu.Selection == 1 ? selected : notSelected;
-        modListColor *= 0.6f;
+        Color modListColor = ModMenu.Selection == 1 ? selected : notSelected;
 
         spriteBatch.Draw(modListTex, new Vector2(320, 251), null, modListColor, 0f, modListCenter, 1f, SpriteEffects.None, 0f);
+    }
 
-        string message = "Mods loaded:\n";
+    private static void ModListInterface()
+    {
+        var input = Globals.Game.xInput_Menu;
 
-        foreach (Mod mod in ModManager.Mods.Where(x => x.Name != VanillaMod.ModName))
+        if (input.Down.bPressed)
         {
-            message += mod.Name + " v." + (mod.Version?.ToString() ?? "Unknown") + "\n";
+            Globals.Game.xSoundSystem.PlayInterfaceCue("Menu_Move");
+            ModListMenu.Selection++;
+        }
+        else if (input.Up.bPressed)
+        {
+            Globals.Game.xSoundSystem.PlayInterfaceCue("Menu_Move");
+            ModListMenu.Selection--;
         }
 
-        RenderMessage(message.TrimEnd('\n'), 422, 243);
+        if (input.MenuBack.bPressed)
+        {
+            Globals.Game.xSoundSystem.PlayInterfaceCue("Menu_Cancel");
+
+            CurrentSubMenu = 0;
+        }
+    }
+
+    private static void ModListRender()
+    {
+        int x = 320;
+        int y = 120;
+
+        var mods = ModManager.Mods.Where(x => x.Name != VanillaMod.ModName).ToList();
+        var modView = mods.Skip(ModListMenu.ScrollStart).Take(ModListMenu.MaxItems).ToList();
+
+        float alpha = Globals.Game.xGlobalData.xMainMenuData.fCurrentMenuAlpha;
+
+        Vector2 size = new(200, 50);
+
+        foreach (var mod in modView)
+        {
+            Vector2 measure = FontManager.GetFont(FontManager.FontType.Reg7).MeasureString(mod.Name + " v." + mod.Version.ToString());
+
+            size.X = Math.Max(size.X, measure.X);
+            size.Y += measure.Y;
+        }
+
+        Globals.Game._Menu_RenderNotice(Globals.SpriteBatch, 1f, new Rectangle(x - 4 - (int)(size.X / 2), y - 4, (int)size.X + 8, (int)size.Y + 8), false);
+
+        int yOffset = 0;
+
+        Vector2 measureTitle = FontManager.GetFont(FontManager.FontType.Bold7Spacing1).MeasureString("Mods loaded:");
+
+        Globals.SpriteBatch.DrawString(FontManager.GetFont(FontManager.FontType.Bold7Spacing1), "Mods loaded:", new Vector2(x - (int)(measureTitle.X / 2), y + yOffset), Color.White * alpha * 0.75f);
+
+        yOffset += (int)measureTitle.Y + 10;
+
+        if (ModListMenu.ScrollStart > 0)
+        {
+            Vector2 measureArrow = FontManager.GetFont(FontManager.FontType.Bold7Spacing1).MeasureString("/\\");
+
+            Globals.SpriteBatch.DrawString(FontManager.GetFont(FontManager.FontType.Reg7), "/\\", new Vector2(x - (int)(measureArrow.X / 2), y + yOffset), Color.White * alpha * 0.75f);
+        }
+
+        yOffset += 10;
+
+        foreach (var mod in modView)
+        {
+            var text = mod.Name + " v." + mod.Version.ToString();
+
+            Vector2 measure = FontManager.GetFont(FontManager.FontType.Reg7).MeasureString(text);
+
+            Globals.SpriteBatch.DrawString(FontManager.GetFont(FontManager.FontType.Reg7), text, new Vector2(x - (int)(measure.X / 2), y + yOffset), Color.White * alpha * (mod == mods[ModListMenu.Selection] ? 1f : 0.75f));
+
+            yOffset += (int)measure.Y;
+        }
+
+        if (ModListMenu.ScrollStart + ModListMenu.MaxItems < mods.Count)
+        {
+            Vector2 measureArrow = FontManager.GetFont(FontManager.FontType.Bold7Spacing1).MeasureString("\\/");
+
+            Globals.SpriteBatch.DrawString(FontManager.GetFont(FontManager.FontType.Reg7), "\\/", new Vector2(x - (int)(measureArrow.X / 2), y + yOffset), Color.White * alpha * 0.75f);
+        }
     }
 }
