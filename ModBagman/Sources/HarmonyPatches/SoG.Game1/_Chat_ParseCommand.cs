@@ -12,8 +12,8 @@ static class _Chat_ParseCommand
 
         if (words.Length != 2)
         {
-            CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Command syntax: /<mod>:<command> [args...].");
-            CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Use vanilla commands with /sog:<command> [args...]");
+            CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Command syntax: <mod>:<command> [args...].");
+            CAS.AddChatMessage($"[{ModBagmanMod.ModName}] Use vanilla commands with sog:<command> [args...]");
             return;
         }
 
@@ -39,56 +39,45 @@ static class _Chat_ParseCommand
             // Intercept vanilla calls
             if (trueCommand.Equals("help", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (message != "")
+                if (message == "")
                 {
                     Program.Logger.LogInformation($"Parsed help command for {target}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}", connection);
-                    return;
                 }
                 else
                 {
                     Program.Logger.LogInformation($"Parsed help command for {target}, arguments: {message}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}:{message}", connection);
-                    return;
                 }
             }
             else
             {
                 // Return the modified command
                 Program.Logger.LogInformation($"Running vanilla command {trueCommand}: {message}");
-                Globals.Game._Chat_ParseCommand(trueCommand + " " + message, connection);
-                return;
+                Globals.Game._Chat_ParseCommand($"{trueCommand} {message}", connection);
             }
+            return;
         }
 
         var entry = Entries.Commands.Get(mod, "");
 
-        CommandParser parser = null;
-
-        if (entry != null && !entry.Commands.TryGetValue(trueCommand, out parser))
-        {
-            // Try case insensitive close matches
-            parser = entry.Commands.FirstOrDefault(x => x.Key.Equals(trueCommand, StringComparison.InvariantCultureIgnoreCase)).Value;
-        }
+        CommandParser parser = entry?.Commands.FirstOrDefault(x => x.Key.Equals(trueCommand, StringComparison.InvariantCultureIgnoreCase)).Value;
 
         if (entry == null || parser == null)
         {
-            Program.Logger.LogInformation($"entry {entry != null}, parser ${parser != null}");
-
             if (trueCommand.Equals("help", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (message != "")
+                if (message == "")
                 {
                     Program.Logger.LogInformation($"Parsed help command for {target}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}", connection);
-                    return;
                 }
                 else
                 {
                     Program.Logger.LogInformation($"Parsed help command for {target}, arguments: {message}");
                     ParseModCommands($"{ModBagmanMod.ModName}:Help", $"{target}:{message}", connection);
-                    return;
                 }
+                return;
             }
 
             CAS.AddChatMessage($"[{target}] Unknown command!");
@@ -97,7 +86,7 @@ static class _Chat_ParseCommand
 
         string[] args = message.Split(new char[] { ' ' }, options: StringSplitOptions.RemoveEmptyEntries);
 
-        Program.Logger.LogInformation("Parsed mod command {target} : {trueCommand}, arguments: {args.Length}", target, trueCommand, args.Length);
+        Program.Logger.LogInformation($"Parsed mod command {target} : {trueCommand}, arguments: {args.Length}");
         parser(args, connection);
     }
 }

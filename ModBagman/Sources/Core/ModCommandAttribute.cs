@@ -7,6 +7,10 @@
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class ModCommandAttribute : Attribute
 {
+    /// <summary>
+    /// Creates a mod command attribute.
+    /// </summary>
+    /// <param name="command">String to use as the name of the command.</param>
     public ModCommandAttribute(string command = null)
     {
         Command = command;

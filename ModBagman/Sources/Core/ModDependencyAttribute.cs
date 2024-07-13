@@ -19,6 +19,11 @@ public class ModDependencyAttribute : Attribute
     /// </summary>
     public string ModVersion { get; }
 
+    /// <summary>
+    /// Creates a mod dependency attribute
+    /// </summary>
+    /// <param name="NameID">Name of the mod to depend upon.</param>
+    /// <param name="ModVersion">Acceptable versions for the mod. You can pass in a range using npm syntax.</param>
     public ModDependencyAttribute(string NameID, string ModVersion = "*")
     {
         this.NameID = NameID;

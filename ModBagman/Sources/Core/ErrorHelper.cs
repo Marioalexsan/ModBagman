@@ -110,10 +110,10 @@ internal static class ErrorHelper
         msg.AppendLine("=== Stack Trace ===");
         PrintStackTrace(msg, exception);
         msg.AppendLine("=== Game Settings ===");
-        msg.AppendLine("Game Version = " + Globals.Game.sVersionNumberOnly);
-        msg.AppendLine("Fullscreen = " + Globals.Game.xOptions.enFullScreen);
-        msg.AppendLine("Network role = " + Globals.Game.xNetworkInfo.enCurrentRole);
-        msg.AppendLine("Extra Error Info => " + DebugKing.dssExtraErrorInfo.Count + " pairs");
+        msg.AppendLine($"Game Version = {Globals.Game.sVersionNumberOnly}");
+        msg.AppendLine($"Fullscreen = {Globals.Game.xOptions.enFullScreen}");
+        msg.AppendLine($"Network role = {Globals.Game.xNetworkInfo.enCurrentRole}");
+        msg.AppendLine($"Extra Error Info => {DebugKing.dssExtraErrorInfo.Count} pairs");
 
         foreach (KeyValuePair<string, string> kvp in DebugKing.dssExtraErrorInfo)
         {
@@ -121,11 +121,11 @@ internal static class ErrorHelper
         }
 
         msg.AppendLine("=== GrindScript Info ===");
-        msg.AppendLine("Active Mods => " + ModManager.Mods.Count + " mods");
+        msg.AppendLine($"Active Mods => {ModManager.Mods.Count} mods");
 
         foreach (Mod mod in ModManager.Mods)
         {
-            msg.AppendLine("  " + mod.ToString());
+            msg.AppendLine($"  {mod}");
         }
 
         var time = DateTime.Now;
@@ -138,7 +138,7 @@ internal static class ErrorHelper
             Directory.CreateDirectory(Globals.LogPath);
             writer = new StreamWriter(new FileStream(Path.Combine(Globals.LogPath, logName), FileMode.Create, FileAccess.Write));
             writer.Write(msg.ToString());
-            Program.Logger.LogCritical("Exception information written to %appdata%\\ModBagman\\Logs!");
+            Program.Logger.LogCritical($"Exception information written to {Globals.LogPath}!");
         }
         catch (Exception exc)
         {

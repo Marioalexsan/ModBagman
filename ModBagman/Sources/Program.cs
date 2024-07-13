@@ -14,10 +14,8 @@ internal static class Program
     {
         var random = new Random();
 
-        string defaultText = "Patching Game...";
-
         if (random.NextDouble() < 0.75f)
-            return defaultText;
+            return "Patching Game...";
 
         var easterEggs = new Dictionary<string, int>
         {
@@ -46,7 +44,7 @@ internal static class Program
         return chosenText;
     }
 
-    public static Harmony HarmonyInstance { get; } = new Harmony("ModBagman");
+    private static Harmony HarmonyInstance { get; } = new Harmony("ModBagman");
 
     public static DateTime LaunchTime { get; private set; }
 
@@ -72,28 +70,27 @@ internal static class Program
                 {
                     WriteIndented = true
                 }));
+                return _config;
             }
-            else
-            {
-                try
-                {
-                    _config = System.Text.Json.JsonSerializer.Deserialize<Config>(File.ReadAllText(GetConfigPath()));
 
-                    // Reserialize
-                    if (!_config.ConfigReadonly)
-                    {
-                        File.WriteAllText(GetConfigPath(), System.Text.Json.JsonSerializer.Serialize(_config, new System.Text.Json.JsonSerializerOptions()
-                        {
-                            WriteIndented = true
-                        }));
-                    }
-                }
-                catch (Exception e)
+            try
+            {
+                _config = System.Text.Json.JsonSerializer.Deserialize<Config>(File.ReadAllText(GetConfigPath()));
+
+                // Reserialize
+                if (!_config.ConfigReadonly)
                 {
-                    Logger.LogError("Failed to read configuration file! Please check if ModBagmanConfig.json is valid.");
-                    Logger.LogError($"{e}");
-                    _config = new();
+                    File.WriteAllText(GetConfigPath(), System.Text.Json.JsonSerializer.Serialize(_config, new System.Text.Json.JsonSerializerOptions()
+                    {
+                        WriteIndented = true
+                    }));
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError("Failed to read configuration file! Please check if ModBagmanConfig.json is valid.");
+                Logger.LogError($"{e}");
+                _config = new();
             }
 
             return _config;
@@ -125,7 +122,7 @@ internal static class Program
         {
             Logger.LogCritical("Exiting game due to crash.");
 
-            MessageBox.Show("Game crashed due to an exception!\nPlease check the logs in %appdata%/ModBagman/Logs.", "GAME DEADED", MessageBoxButton.OK);
+            MessageBox.Show($"Game crashed due to an exception!\nPlease check the logs in {Globals.LogPath}.", "GAME DEADED", MessageBoxButton.OK);
         }
         else
         {
@@ -135,44 +132,47 @@ internal static class Program
 
     private static void CheckFirstTimeBoot()
     {
-        if (!Directory.Exists(Globals.ModData))
-        {
-            var result = MessageBox.Show($"""                 
-                Seems like this is the first time you're using ModBagman!   
-                The mod tool uses a separate save location from vanilla SoG.
-                Would you like to copy over your saves from the base game?  
+        if (Directory.Exists(Globals.ModData))
+            return;
+
+        var result = MessageBox.Show($"""                 
+            Seems like this is the first time you're using ModBagman!   
+            The mod tool uses a separate save location from vanilla SoG.
+            Would you like to copy over your saves from the base game?  
                                                                             
-                SoG savepath:       %appdata%\Secrets of Grindea\           
-                ModBagman savepath: {Globals.AppDataPath}             
-                """, "Copy saves?", MessageBoxButton.YesNo
-            );
+            SoG savepath:       {Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\Secrets of Grindea\           
+            ModBagman savepath: {Globals.AppDataPath}             
+            """, "Copy saves?", MessageBoxButton.YesNo
+        );
 
-            Directory.CreateDirectory(Globals.AppDataPath);
-            Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Characters"));
-            Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Worlds"));
+        Directory.CreateDirectory(Globals.AppDataPath);
+        Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Characters"));
+        Directory.CreateDirectory(Path.Combine(Globals.AppDataPath, "Worlds"));
 
-            if (result == MessageBoxResult.Yes)
-            {
-                var vanilla = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Secrets of Grindea");
+        if (result == MessageBoxResult.Yes)
+            CopySavesFromVanilla();
+    }
 
-                for (int i = 0; i < 9; i++)
-                {
-                    if (File.Exists(Path.Combine(vanilla, "Characters", i + ".cha")))
-                        File.Copy(Path.Combine(vanilla, "Characters", i + ".cha"), Path.Combine(Globals.AppDataPath, "Characters", i + ".cha"), true);
+    private static void CopySavesFromVanilla()
+    {
+        var vanilla = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Secrets of Grindea");
 
-                    if (File.Exists(Path.Combine(vanilla, "Worlds", i + ".wld")))
-                        File.Copy(Path.Combine(vanilla, "Worlds", i + ".wld"), Path.Combine(Globals.AppDataPath, "Worlds", i + ".wld"), true);
-                }
+        for (int i = 0; i <= 8; i++)
+        {
+            if (File.Exists(Path.Combine(vanilla, "Characters",  $"{i}.cha")))
+                File.Copy(Path.Combine(vanilla, "Characters", $"{i}.cha"), Path.Combine(Globals.AppDataPath, "Characters", $"{i}.cha"), true);
 
-                if (File.Exists(Path.Combine(vanilla, "arcademode.sav")))
-                    File.Copy(Path.Combine(vanilla, "arcademode.sav"), Path.Combine(Globals.AppDataPath, "arcademode.sav"), true);
-
-                MessageBox.Show("""
-                    Saves copied!
-                    """, "Saves copied successfully", MessageBoxButton.OK
-                );
-            }
+            if (File.Exists(Path.Combine(vanilla, "Worlds", $"{i}.wld")))
+                File.Copy(Path.Combine(vanilla, "Worlds", $"{i}.wld"), Path.Combine(Globals.AppDataPath, "Worlds", $"{i}.wld"), true);
         }
+
+        if (File.Exists(Path.Combine(vanilla, "arcademode.sav")))
+            File.Copy(Path.Combine(vanilla, "arcademode.sav"), Path.Combine(Globals.AppDataPath, "arcademode.sav"), true);
+
+        MessageBox.Show("""
+            Saves copied!
+            """, "Saves copied successfully", MessageBoxButton.OK
+        );
     }
 
     private static void SetupModBagman()
@@ -269,7 +269,7 @@ internal static class Program
 
         string text = PatchLoadingText;
         string status = $"{(!string.IsNullOrEmpty(CurrentMethod) ? $"Patching {CurrentMethod}" : "Running Harmony logic")} ({CurrentPatchingTime.Elapsed.TotalSeconds:F1}s)";
-        Texture2D bag = Globals.Game.Content.Load<Texture2D>("GUI/Dialogue/Portraits/Bag/default");
+        Texture2D bag = Globals.Game.Content.TryLoad<Texture2D>("GUI/Dialogue/Portraits/Bag/default", true);
 
         Globals.Game.GraphicsDevice.Clear(Color.Black);
 

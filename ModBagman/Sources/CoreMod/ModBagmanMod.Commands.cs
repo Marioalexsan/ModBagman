@@ -12,11 +12,11 @@ internal partial class ModBagmanMod : Mod
     }
 
     [ModCommand(Description = "Show ModBagman commands.")]
-    private void Help(string[] args, int connection)
+    private void Help(string[] args)
     {
         if (args.Length > 1)
         {
-            CAS.AddChatMessage($"[{Name}] Usage: /{Name}:Help [<mod>[:<command>]].");
+            CAS.AddChatMessage($"[{Name}] Usage: /{Name}:{nameof(Help)} [<mod>[:<command>]].");
             return;
         }
 
@@ -24,7 +24,7 @@ internal partial class ModBagmanMod : Mod
 
         if (parts.Length > 2)
         {
-            CAS.AddChatMessage($"[{Name}] Usage: /{Name}:Help [<mod>[:<command>]].");
+            CAS.AddChatMessage($"[{Name}] Usage: /{Name}:{nameof(Help)} [<mod>[:<command>]].");
             return;
         }
 
@@ -47,14 +47,14 @@ internal partial class ModBagmanMod : Mod
 
             if (commandList.Count == 0)
             {
-                CAS.AddChatMessage($"[{Name}] No commands are defined for {Name}!");
+                CAS.AddChatMessage($"[{Name}] No commands are defined for {mod.Name}!");
                 return;
             }
 
             string target = mod == this ? "" : $" for {mod.Name}";
 
             if (!string.IsNullOrEmpty(mod.GetCommands().Alias))
-                target += $" (alias: {mod.GetCommands().Alias})";
+                target += $" ({mod.GetCommands().Alias}:<cmd>)";
 
             CAS.AddChatMessage($"[{Name}] Command list{target}:");
 
@@ -85,8 +85,10 @@ internal partial class ModBagmanMod : Mod
 
             var entry = Entries.Commands.Get(mod, "");
 
-            if (entry != null && entry.HelpText.TryGetValue(command, out string desc))
+            if (entry != null)
             {
+                var desc = entry?.HelpText.FirstOrDefault(x => x.Key.Equals(command, StringComparison.InvariantCultureIgnoreCase)).Value;
+
                 if (desc == null)
                 {
                     CAS.AddChatMessage("<No info provided>");
@@ -99,13 +101,13 @@ internal partial class ModBagmanMod : Mod
             }
             else
             {
-                CAS.AddChatMessage("<No description provided>");
+                CAS.AddChatMessage("<No info provided>");
             }
         }
     }
 
     [ModCommand(Description = "Show list of available mods.")]
-    private void ModList(string[] args, int connection)
+    private void ModList()
     {
         CAS.AddChatMessage($"[{Name}] Mod Count: {ModManager.Mods.Count}");
 
@@ -129,7 +131,7 @@ internal partial class ModBagmanMod : Mod
     }
 
     [ModCommand(Description = "Render level colliders\n-c : Render combat\n-l : Render level \n-m : Render movement")]
-    private void RenderColliders(string[] args, int connection)
+    private void RenderColliders(string[] args)
     {
         if (args.Any(x => !(x == "-c" || x == "-l" || x == "-m")))
         {
@@ -166,7 +168,7 @@ internal partial class ModBagmanMod : Mod
     }
 
     [ModCommand(Description = "Spawns an entity in the world.\nValid entities: Item, Pin")]
-    private void Spawn(string[] args, int connection)
+    private void Spawn(string[] args)
     {
         if (NetUtils.IsClient)
         {
@@ -255,7 +257,7 @@ internal partial class ModBagmanMod : Mod
     }
 
     [ModCommand]
-    private void ToggleDebugMode(string[] args, int connection)
+    private void ToggleDebugMode()
     {
         Globals.Game.bUseDebugInRelease = !Globals.Game.bUseDebugInRelease;
         CAS.AddChatMessage("Debug mode is now " + (Globals.Game.bUseDebugInRelease ? "on" : "off"));
@@ -267,7 +269,7 @@ internal partial class ModBagmanMod : Mod
     }
 
     [ModCommand]
-    private void PlayMusic(string[] args, int connection)
+    private void PlayMusic(string[] args)
     {
         if (args.Length != 2)
         {
@@ -296,7 +298,7 @@ internal partial class ModBagmanMod : Mod
     }
 
     [ModCommand]
-    private void PlayEffect(string[] args, int connection)
+    private void PlayEffect(string[] args)
     {
         if (args.Length != 2)
         {

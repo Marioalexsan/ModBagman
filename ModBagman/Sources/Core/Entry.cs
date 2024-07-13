@@ -25,13 +25,24 @@ public abstract class Entry<IDType> where IDType : struct, Enum
     /// </summary>
     public IDType GameID { get; internal set; }
 
-    public bool Ready { get; internal set; } = false;
-
+    /// <summary>
+    /// Is this a vanilla entry?
+    /// (this is the same as it being part of <see cref="VanillaMod"/>).
+    /// </summary>
     public bool IsVanilla => Mod.GetType() == typeof(VanillaMod);
 
+    /// <summary>
+    /// Is this a modded entry?
+    /// </summary>
     public bool IsModded => !IsVanilla && Mod != null;
 
+    /// <summary>
+    /// Is this an unknown entry?
+    /// (it's either an invalid item or an item from an unloaded mod)
+    /// </summary>
     public bool IsUnknown => !(IsVanilla || IsModded);
+
+    private bool Ready { get; set; } = false;
 
     internal void InitializeEntry()
     {
@@ -60,27 +71,26 @@ internal static class Entries
 {
     private static void CheckInit()
     {
-        if (_managers.Count == 0)
+        if (_managers.Count > 0)
+            return;
+
+        Type[] _managerConstructorTypes = new[]
         {
-            Type[] _managerConstructorTypes = new[]
-            {
-                typeof(long),
-                typeof(long)
-            };
+            typeof(long),
+            typeof(long)
+        };
 
-            // Create managers for all registered entries in the assembly
-            var entryTypes = typeof(ModManager).Assembly.DefinedTypes
-                .Select(x => (x, x.GetCustomAttribute<ModEntryAttribute>()))
-                .Where(x => x.Item2 != null);
+        // Create managers for all registered entries in the assembly
+        var entryTypes = typeof(ModManager).Assembly.DefinedTypes
+            .Select(x => (x, x.GetCustomAttribute<ModEntryAttribute>()))
+            .Where(x => x.Item2 != null);
 
-            foreach ((var entryType, var attr) in entryTypes)
-            {
-                var type = typeof(EntryManager<,>).MakeGenericType(entryType.BaseType.GenericTypeArguments[0], entryType);
+        foreach ((var entryType, var attr) in entryTypes)
+        {
+            var type = typeof(EntryManager<,>).MakeGenericType(entryType.BaseType.GenericTypeArguments[0], entryType);
 
-                _managers[type] = (IEntryManager)type.GetConstructor(_managerConstructorTypes).Invoke(new object[] { attr.Start, attr.Count });
-            }
+            _managers[type] = (IEntryManager)type.GetConstructor(_managerConstructorTypes).Invoke(new object[] { attr.Start, attr.Count });
         }
-
     }
 
     private static readonly Dictionary<Type, IEntryManager> _managers = new();
