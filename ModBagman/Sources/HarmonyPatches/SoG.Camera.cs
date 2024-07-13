@@ -15,6 +15,17 @@ static class SoG_Camera
 
         return new CodeMatcher(code)
             .MatchStartForward(
+                new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Camera), nameof(Camera.bEnableViewPortOverride)))
+            )
+            .ThrowIfInvalid("Balls")
+            .Advance(1)
+            .Insert(
+                new CodeInstruction(OpCodes.Call, SymbolExtensions.GetMethodInfo(() => IsCameraInFreemode())),
+                new CodeInstruction(OpCodes.Ldc_I4_0),
+                new CodeInstruction(OpCodes.Ceq),
+                new CodeInstruction(OpCodes.And)
+            )
+            .MatchStartForward(
                 new CodeMatch(OpCodes.Ldarg_0),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Camera), nameof(Camera.bEnableBoundsOverride)))
             )
