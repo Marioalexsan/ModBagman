@@ -6,7 +6,7 @@ using System.IO.Compression;
 
 namespace ModBagman;
 
-public class ModInfo
+internal class ModInfo
 {
     public string Name { get; set; }
     public Version Version { get; set; }
@@ -18,7 +18,7 @@ public class ModInfo
     public Dictionary<string, RogueLikeMode.TreatsCurses> CurseIDMap { get; set; } = new Dictionary<string, RogueLikeMode.TreatsCurses>();
 }
 
-public class MetadataFile
+internal class MetadataFile
 {
     public Version ModBagmanVersion { get; set; }
     public string GrindeaVersion { get; set; }
@@ -26,13 +26,13 @@ public class MetadataFile
     public List<ModInfo> Mods { get; set; } = new List<ModInfo>();
 }
 
-public struct ModShortInfo
+internal struct ModShortInfo
 {
     public string Name { get; set; }
     public Version Version { get; set; }
 }
 
-public class SaveCompatibility
+internal class SaveCompatibility
 {
     public bool IsCompatible
     {

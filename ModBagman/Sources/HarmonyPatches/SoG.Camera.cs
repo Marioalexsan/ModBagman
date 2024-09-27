@@ -17,7 +17,7 @@ static class SoG_Camera
             .MatchStartForward(
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Camera), nameof(Camera.bEnableViewPortOverride)))
             )
-            .ThrowIfInvalid("Balls")
+            .ThrowIfInvalid($"Transpiler {nameof(FreemodeCamera)} failed.")
             .Advance(1)
             .Insert(
                 new CodeInstruction(OpCodes.Call, SymbolExtensions.GetMethodInfo(() => IsCameraInFreemode())),
@@ -29,7 +29,7 @@ static class SoG_Camera
                 new CodeMatch(OpCodes.Ldarg_0),
                 new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Camera), nameof(Camera.bEnableBoundsOverride)))
             )
-            .ThrowIfInvalid("Balls")
+            .ThrowIfInvalid($"Transpiler {nameof(FreemodeCamera)} failed.")
             .Insert(
                 new CodeInstruction(OpCodes.Call, SymbolExtensions.GetMethodInfo(() => IsCameraInFreemode())),
                 new CodeInstruction(OpCodes.Brfalse, label),

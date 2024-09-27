@@ -29,9 +29,6 @@ internal static class ModManager
         ReloadSoGState();
         LoadMods(ModLoader.ObtainMods());
         PrepareSoGStatePostLoad();
-
-        // TODO Unimplemented, either remove or refine the featuer
-        //FetchModDatabase();
     }
 
     private static void UnloadMods()
