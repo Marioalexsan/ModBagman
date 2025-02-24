@@ -134,7 +134,16 @@ static class _Network_ParseClientMessage
         }
 
         var clientMods = new List<(string NameID, Version Version)>();
-        var serverMods = ModManager.Mods;
+        var serverMods = new List<Mod>();
+        
+        foreach (Mod mod in ModManager.Mods)
+        {
+            if (mod.DisableObjectCreation)
+            {
+                continue;
+            }
+            serverMods.Add(mod);
+        }
 
         int clientModCount = msg.ReadInt32();
         int serverModCount = serverMods.Count;
