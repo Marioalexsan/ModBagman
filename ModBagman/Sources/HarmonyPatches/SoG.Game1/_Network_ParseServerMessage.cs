@@ -104,8 +104,19 @@ internal class _Network_ParseServerMessage
         Program.Logger.LogDebug("Writing mod list!");
 
         msg.Write(ModBagmanMod.Instance.Version.ToString());
-
-        msg.Write(ModManager.Mods.Count);
+        
+        int sentModCount = 0;
+        
+        foreach (Mod mod in ModManager.Mods)
+        {
+            if (mod.DisableObjectCreation)
+            {
+                continue;
+            }
+            sentModCount++;
+        }
+        
+        msg.Write(sentModCount);
 
         foreach (Mod mod in ModManager.Mods)
         {
