@@ -59,7 +59,7 @@ def merge_assemblies():
 
     # Use ILRepack to join all assemblies into target
     cmd = [
-        ILREPACK_PATH,
+        '"' + ILREPACK_PATH + '"',
         '/out:merged/' + TARGET_ASSEMBLY,
         '/zeropekind',
         '/union',
